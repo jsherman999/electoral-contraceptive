@@ -129,6 +129,8 @@ button, select, input { font-family: inherit; }
 .legend .dash { display: inline-block; width: 26px; height: 15px; border: 2px dashed var(--rep); border-radius: 4px; vertical-align: middle; }
 .legend .ringchip { display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: var(--dem); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--gold); vertical-align: middle; margin-right: 2px; }
 .legend .item { display: inline-flex; align-items: center; gap: 5px; }
+.legend .maplink { margin-left: auto; color: #8ab4ff; font-weight: 700; text-decoration: none; border: 1px solid #2c427a; border-radius: 999px; padding: 3px 10px; }
+.legend .maplink:hover { background: #1a2a54; }
 
 /* ---------- board grid ---------- */
 .board {

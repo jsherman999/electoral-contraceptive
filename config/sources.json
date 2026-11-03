@@ -66,7 +66,12 @@
       "note": "Iowa SOS election night reporting (Clarity), 2026 General = IA/127077 (from the results site, Nov 3). The host often challenges GitHub; relay from home with --feeds ...,ia"
     },
     "ky": { "adapter": "json", "url": "", "hint": "Kentucky's live results (vrsws.sos.ky.gov/liveresults, XML data at /liveresults/data) refuse GitHub (HTTP 403); being checked from a home connection." },
-    "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov/site/) answers GitHub; its data-file names are still being worked out." },
+    "in": {
+      "adapter": "in-enr",
+      "url": "https://enr.indianavoters.in.gov/site/",
+      "categories": ["1005"],
+      "note": "Indiana Election Division results (enr.indianavoters.in.gov), county level. Office category 1005 = US Representative; file suffix from data/settings.json."
+    },
     "oh": {
       "adapter": "cdf",
       "url": "https://liveresults.ohiosos.gov/Api/v1/download?filename=VSSC1622XmlFileBlob",

@@ -17,8 +17,18 @@ races are called.
   turnout against 2024, a scatter plot of every precinct (2026 margin against 2024), a timeline, a
   breakdown by vote type, a county table, and a searchable, sortable table of every precinct. You can
   switch the baseline between **2024 President** and **2024 House**.
+- **3D precinct map** (`map.html`, linked from the board): every precinct as a line standing on a
+  rotatable US map. In **Who leads** mode, height is the share of the precinct's expected vote counted
+  and color is who is ahead. **Shift since 2024** turns each line into a vector whose length is the
+  swing against 2024; it leans west and blue for a Democratic shift, east and red for a Republican one.
+  Switch between House and Senate races and between the 2024 President and House baselines. Drag to
+  move, scroll or pinch to zoom, right-drag / Ctrl+drag (two-finger drag on phones) to rotate and tilt;
+  the buttons at the bottom right do the same. Hover or tap a line for its numbers. Positions are
+  approximate: results come by precinct and the 2024 files carry no coordinates, so each precinct is
+  drawn at a fixed spot inside its county (county-level results stand at the county's center).
 - **Simulation:** add `?demo` to the URL for a simulated night with a time slider and a national
-  environment picker. Use it to check everything before polls close.
+  environment picker. Use it to check everything before polls close. It works on the map too
+  (`map.html?demo`), where the simulated precincts are scattered across real counties.
 
 ## Setup (before polls close)
 
@@ -115,6 +125,7 @@ pulls config on every pass, so a pasted URL starts working within about 90 secon
 |---|---|---|
 | `ncsbe` | North Carolina (statewide, precinct level) | **Already set up and verified.** The 2026 file is live with zero counts. |
 | `clarity` | SC, CO, IA statewide (**set up to find tonight's election by itself**); many county sites elsewhere (PA, MI, NJ, OH, KY, NE) | Nothing for SC/CO/IA: on each pass the collector scans the official results pages for links to the Clarity site and uses the newest election dated 11/3/2026. Status shows under **Sources**. To override, paste the results page URL from your browser, e.g. `https://www.enr-scvotes.org/SC/<id>/web.345435/#/summary`. Works on state-branded Clarity hosts too. Statewide pages fetch every county's precinct file; limit with `"counties": ["Charleston"]`. |
+| `in-enr` | Indiana statewide, county level | Preset to `https://enr.indianavoters.in.gov/site/` (office category 1005 = US Representative). |
 | `enhanced-voting` | Georgia and Virginia (both preset from their 2024 URL patterns) | The public results page, e.g. `https://results.sos.ga.gov/results/public/Georgia/elections/2026NovGen` |
 | `fl-dos` | Florida statewide, county level | Preset. Add county Supervisor of Elections feeds for precinct detail; precinct rows replace the county row. |
 | `delimited` | Any CSV/TSV (zipped or not) | URL plus a `columns` map (see [`collector/adapters/delimited.js`](collector/adapters/delimited.js)) |
@@ -188,9 +199,11 @@ my best reading of the graphic, so check them.
 ```
 site/                 static app (GitHub Pages)
   board.json          cards, columns, signals, composites
+  map.html, js/map.js 3D precinct map (deck.gl 9.4.0, vendored in site/vendor/)
+  geo/us-map.json     state outlines and county shapes (us-atlas / Census; rebuild with collector/build-map-geo.js)
   js/shared/          model, normalization and simulator, shared by the browser and the collector
 collector/            Node collector (no dependencies)
-  adapters/           ncsbe, clarity, enhanced-voting, fl-dos, delimited, json
+  adapters/           ncsbe, clarity, enhanced-voting, fl-dos, in-enr, tx-civix, cdf, delimited, json, relay
   build-baseline.js   builds baseline/<st>.json.gz
 config/               sources.json (feeds) and calls.json (manual calls)
 baseline/             2024 precinct baselines (President and House, by vote type) for 21 states

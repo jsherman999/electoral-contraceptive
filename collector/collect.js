@@ -34,8 +34,9 @@ import * as jsonAdapter from './adapters/json.js';
 import * as cdf from './adapters/cdf.js';
 import * as txCivix from './adapters/tx-civix.js';
 import * as relay from './adapters/relay.js';
+import * as inEnr from './adapters/in-enr.js';
 
-const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix, relay };
+const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix, relay, 'in-enr': inEnr };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>3D Precinct Map</title>
+    <meta name="description" content="Every precinct on the House night board as a line: height is how much of its vote is counted, color is who leads, or the shift since 2024." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/map.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='4' height='24' rx='2' fill='%231f5bc4'/%3E%3Crect x='14' y='12' width='4' height='16' rx='2' fill='%23d22b2b'/%3E%3Crect x='22' y='8' width='4' height='20' rx='2' fill='%231f5bc4'/%3E%3C/svg%3E" />
+    <script src="config.js"></script>
+    <script src="vendor/deck.gl-9.4.0/dist.min.js"></script>
+  </head>
+  <body>
+    <div id="map" aria-label="3D map of precinct returns"></div>
+
+    <header class="panel" id="panel">
+      <div class="phead">
+        <a class="back" href="./" title="Back to the board">← Board</a>
+        <h1>Precinct map</h1>
+        <button type="button" class="collapse" id="collapse" aria-expanded="true" aria-controls="pbody" title="Hide controls">▾</button>
+      </div>
+      <div class="pbody" id="pbody">
+        <div class="seg" role="radiogroup" aria-label="What the lines show">
+          <button type="button" data-mode="lead" class="on" role="radio" aria-checked="true">Who leads</button>
+          <button type="button" data-mode="swing" role="radio" aria-checked="false">Shift since 2024</button>
+        </div>
+        <div class="seg" role="radiogroup" aria-label="Races">
+          <button type="button" data-chamber="house" class="on" role="radio" aria-checked="true">House races</button>
+          <button type="button" data-chamber="senate" role="radio" aria-checked="false">Senate races</button>
+        </div>
+        <label class="row">Compare with
+          <select id="base">
+            <option value="pres">2024 President</option>
+            <option value="house">2024 House</option>
+          </select>
+        </label>
+        <label class="row">Line height <input type="range" id="scale" min="0.25" max="4" step="0.25" value="1" /></label>
+        <div class="legend" id="legend"></div>
+        <div id="democtl"></div>
+        <p class="note">Positions are approximate: results come by precinct, and each precinct is drawn at a fixed
+          spot inside its county. County-level results (Florida, Texas, Ohio) stand at the county's center.</p>
+      </div>
+      <div class="status" id="status" aria-live="polite">Loading…</div>
+    </header>
+
+    <div class="navctl" role="group" aria-label="Map controls">
+      <button type="button" data-nav="zoomin" title="Zoom in" aria-label="Zoom in">+</button>
+      <button type="button" data-nav="zoomout" title="Zoom out" aria-label="Zoom out">−</button>
+      <button type="button" data-nav="left" title="Rotate left" aria-label="Rotate left">⟲</button>
+      <button type="button" data-nav="right" title="Rotate right" aria-label="Rotate right">⟳</button>
+      <button type="button" data-nav="up" title="Tilt more" aria-label="Tilt more">⤒</button>
+      <button type="button" data-nav="down" title="Tilt less" aria-label="Tilt less">⤓</button>
+      <button type="button" data-nav="reset" title="Reset view" aria-label="Reset view">⌂</button>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="tip" id="tip" role="status"></div>
+
+    <script type="module" src="js/map.js"></script>
+  </body>
+</html>

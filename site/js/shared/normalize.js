@@ -22,6 +22,14 @@ export function countyKey(name) {
     .replace(/[^A-Z0-9]/g, '');
 }
 
+/**
+ * County key for matching map shapes: countyKey without Alaska's borough/census-area suffixes.
+ * "Anchorage Municipality" -> "ANCHORAGE", "Juneau City and Borough" -> "JUNEAU", "Richmond city" -> "RICHMONDCITY".
+ */
+export function geoCountyKey(name) {
+  return countyKey(String(name ?? '').toUpperCase().replace(/\b(CITY AND BOROUGH|CENSUS AREA|MUNICIPALITY)\b/g, ' '));
+}
+
 const PRECINCT_WORDS = /\b(PRECINCTS?|PCTS?|PREC|PRCT|VOTING DISTRICT|ELECTION DISTRICT|ED)\b\.?/g;
 
 function tokens(s) {

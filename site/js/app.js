@@ -494,6 +494,8 @@ async function main() {
   state.source = src.kind === 'demo' ? new DemoSource(state.board, new URLSearchParams(location.search).get('env') || cfg.defaultDemoEnv || 'wave') : new LiveSource(src);
   renderBoard();
   renderDemoControls();
+  const ml = $('#maplink');
+  if (ml) ml.href = `map.html${location.search}`; // keep ?demo / ?data when switching views
   await refresh();
   schedule();
   // switching between live and demo restarts the timer with the right cadence
