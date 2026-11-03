@@ -62,8 +62,8 @@ pulls config on every pass, so a pasted URL starts working within about 90 secon
 | Adapter | Use it for | What to paste |
 |---|---|---|
 | `ncsbe` | North Carolina (statewide, precinct level) | **Already set up and verified.** The 2026 file is live with zero counts. |
-| `clarity` | SC, CO, IA statewide; many county sites elsewhere (PA, MI, NJ, OH, KY, NE) | The results page URL from your browser, e.g. `https://results.enr.clarityelections.com/SC/123456/web.345435/#/summary`. Statewide pages fetch every county's precinct file; limit with `"counties": ["Charleston"]`. |
-| `enhanced-voting` | Georgia (preset to the 2024 URL pattern), possibly Virginia | The public results page, e.g. `https://results.sos.ga.gov/results/public/Georgia/elections/2026NovGen` |
+| `clarity` | SC, CO, IA statewide (**set up to find tonight's election by itself**); many county sites elsewhere (PA, MI, NJ, OH, KY, NE) | Nothing for SC/CO/IA: on each pass the collector scans the official results pages for links to the Clarity site and uses the newest election dated 11/3/2026. Status shows under **Sources**. To override, paste the results page URL from your browser, e.g. `https://www.enr-scvotes.org/SC/<id>/web.345435/#/summary`. Works on state-branded Clarity hosts too. Statewide pages fetch every county's precinct file; limit with `"counties": ["Charleston"]`. |
+| `enhanced-voting` | Georgia and Virginia (both preset from their 2024 URL patterns) | The public results page, e.g. `https://results.sos.ga.gov/results/public/Georgia/elections/2026NovGen` |
 | `fl-dos` | Florida statewide, county level | Preset. Add county Supervisor of Elections feeds for precinct detail; precinct rows replace the county row. |
 | `delimited` | Any CSV/TSV (zipped or not) | URL plus a `columns` map (see [`collector/adapters/delimited.js`](collector/adapters/delimited.js)) |
 | `json` | Any JSON API | URL plus `rowsPath` and a `fields` map (see [`collector/adapters/json.js`](collector/adapters/json.js)) |
@@ -121,9 +121,9 @@ my best reading of the graphic, so check them.
 
 ## Known limits
 
-- Only NC is wired to a verified live feed. Other states need their URL pasted on the night (FL and GA
-  are preset to URL patterns that could not be tested from here). Races without a feed show
-  "No feed yet".
+- Only NC is wired to a verified live feed. SC, CO and IA find their results URL automatically on the
+  night. FL, GA and VA are preset to URL patterns that could not be tested from here. Other states need
+  a URL pasted. Races without a feed show "No feed yet".
 - Precinct boundaries and names change between elections. Unmatched precincts count toward totals but
   not toward swing. Treat a match rate under about 70% with caution.
 - County-level feeds (Florida's state file) compare a county only once all its precincts are in.

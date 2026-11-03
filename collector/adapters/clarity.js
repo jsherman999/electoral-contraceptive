@@ -1,29 +1,108 @@
-// Clarity / Scytl election-night reporting (results.enr.clarityelections.com).
-// Used statewide in SC, CO, IA, AR, WV and by many counties elsewhere.
+// Clarity / Scytl election-night reporting. Runs on results.enr.clarityelections.com and on
+// state-branded hosts (South Carolina: www.enr-scvotes.org). Used statewide in SC, CO, IA, AR, WV and by
+// many counties elsewhere.
 //
-// Config: paste the results page URL you see in the browser, e.g.
-//   https://results.enr.clarityelections.com/SC/123456/web.345435/#/summary        (statewide)
-//   https://results.enr.clarityelections.com/PA/Bucks/123457/web.345435/#/summary  (one county)
+// Config, either:
+//   { "adapter": "clarity", "url": "<the results page URL from your browser>" }
+//       https://www.enr-scvotes.org/SC/122436/web.345435/#/summary                  (statewide)
+//       https://results.enr.clarityelections.com/PA/Bucks/123457/web.345435/#/summary  (one county)
+// or let the collector find tonight's election by itself:
+//   { "adapter": "clarity", "discover": { "state": "SC", "date": "2026-11-03",
+//       "pages": ["<official pages that link to the results site>", ...] } }
+//   Discovery collects every <host>/<ST>/<election id> link on those pages, then checks the newest
+//   ones for the election date before using one. A pasted url always wins over discovery.
 // For a statewide page the adapter reads the list of participating counties and downloads each
 // county's precinct-level detail.xml. Limit counties with feed.counties: ["Charleston", ...].
 import { get } from '../lib/http.js';
 import { unzipEntry, isZip } from '../lib/zip.js';
 
-const HOST = 'https://results.enr.clarityelections.com';
-
 export function parseClarityUrl(url) {
-  const m = String(url).match(/clarityelections\.com\/+([A-Z]{2})(?:\/([^/#?]+?))?\/(\d+)(?:\/|$|#|\?)/i);
+  const m = String(url).match(/^(https?:\/\/[^/]+)\/+([A-Z]{2})(?:\/([^/#?]+?))?\/(\d+)(?:\/|$|#|\?)/i);
   if (!m) throw new Error(`Not a Clarity results URL: ${url}`);
-  const [, st, county, eid] = m;
-  if (county && /^\d+$/.test(county)) return { st: st.toUpperCase(), county: null, eid: county };
-  return { st: st.toUpperCase(), county: county || null, eid };
+  const [, origin, st, county, eid] = m;
+  if (county && /^\d+$/.test(county)) return { origin, st: st.toUpperCase(), county: null, eid: county };
+  return { origin, st: st.toUpperCase(), county: county || null, eid };
 }
 
-async function currentVersion(path) {
-  const res = await get(`${HOST}/${path}/current_ver.txt`, { conditional: false, retries: 2 });
+async function currentVersion(origin, path) {
+  const res = await get(`${origin}/${path}/current_ver.txt`, { conditional: false, retries: 2 });
   const v = res.text().trim();
   if (!/^\d+$/.test(v)) throw new Error(`Unexpected current_ver.txt for ${path}: ${v.slice(0, 40)}`);
   return v;
+}
+
+// ---------------------------------------------------------------- discovery
+const discovered = new Map(); // feed key -> { url, verified, at }
+
+function datePatterns(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m - 1];
+  return new RegExp(
+    [`\\b0?${m}/0?${d}/${y}\\b`, `${y}-0?${m}-0?${d}`, `${month}\\s+0?${d},?\\s+${y}`, `${y}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}`].join('|'),
+    'i'
+  );
+}
+
+/** Find this state's results URL for the configured election date. Returns { url, verified, note }. */
+export async function discover(cfg, log = () => {}) {
+  const st = String(cfg.state).toUpperCase();
+  const key = `${st}|${cfg.date}`;
+  if (discovered.has(key)) return discovered.get(key);
+  const linkRe = new RegExp(`(https?:\\/\\/[a-z0-9.-]+)?\\/${st}\\/(\\d{5,7})(?=[\\/#?"'\\s<]|$)`, 'gi');
+  const hostRe = cfg.hostPattern ? new RegExp(cfg.hostPattern, 'i') : /clarity|enr|electionresult/i;
+  const cands = new Map();
+  const seen = [];
+  for (const page of cfg.pages || []) {
+    try {
+      const res = await get(page, { timeoutMs: 30000, retries: 1, conditional: false, headers: { accept: 'text/html,*/*' } });
+      const html = res.text();
+      const origin = new URL(page).origin;
+      let n = 0;
+      for (const m of html.matchAll(linkRe)) {
+        const host = m[1] || origin;
+        if (!hostRe.test(host)) continue;
+        cands.set(`${host}|${m[2]}`, { origin: host, eid: Number(m[2]) });
+        n += 1;
+      }
+      seen.push(`${new URL(page).host}: ${n} links`);
+    } catch (e) {
+      seen.push(`${new URL(page).host}: ${e.message.slice(0, 60)}`);
+    }
+  }
+  const dateRe = datePatterns(cfg.date);
+  const ranked = [...cands.values()].sort((a, b) => b.eid - a.eid).slice(0, 8);
+  let fallback = null;
+  for (const c of ranked) {
+    try {
+      const ver = await currentVersion(c.origin, `${st}/${c.eid}`);
+      const url = `${c.origin}/${st}/${c.eid}/`;
+      fallback ||= url;
+      let text = '';
+      for (const f of ['json/electionsettings.json', 'json/en/electionsettings.json', 'json/en/summary.json']) {
+        try {
+          text += (await get(`${c.origin}/${st}/${c.eid}/${ver}/${f}`, { conditional: false, retries: 0, timeoutMs: 20000 })).text().slice(0, 200000);
+          if (dateRe.test(text)) break;
+        } catch {
+          /* try the next file */
+        }
+      }
+      if (dateRe.test(text)) {
+        const hit = { url, verified: true, note: `discovered ${url} (election date ${cfg.date} confirmed)` };
+        discovered.set(key, hit);
+        log(`clarity ${st}: ${hit.note}`);
+        return hit;
+      }
+    } catch {
+      /* not a live Clarity election */
+    }
+  }
+  if (fallback) {
+    // Not cached, so the next pass tries again to confirm the date.
+    const hit = { url: fallback, verified: false, note: `using newest election found, ${fallback}, date not confirmed (${seen.join('; ')})` };
+    log(`clarity ${st}: ${hit.note}`);
+    return hit;
+  }
+  throw new Error(`could not find the ${cfg.date} election (${seen.join('; ') || 'no pages configured'}); paste the results URL into config/sources.json`);
 }
 
 const attrRe = /([\w:-]+)="([^"]*)"/g;
@@ -91,26 +170,40 @@ export function parseDetailXml(xml, { county = null, contestFilters = null } = {
   return { rows, timestamp: ts, region, reporting };
 }
 
-async function detailFor(path, ver, opts) {
-  const res = await get(`${HOST}/${path}/${ver}/reports/detailxml.zip`, { timeoutMs: 90000 });
+async function detailFor(origin, path, ver, opts) {
+  const res = await get(`${origin}/${path}/${ver}/reports/detailxml.zip`, { timeoutMs: 90000 });
   const xml = (isZip(res.buf) ? unzipEntry(res.buf, /\.xml$/i) : res.buf).toString('utf8');
   return parseDetailXml(xml, opts);
 }
 
 export async function fetchFeed(feed, ctx = {}) {
-  const { st, county, eid } = parseClarityUrl(feed.url);
+  let url = feed.url;
+  let found = null;
+  if (!url && feed.discover) {
+    found = await discover(feed.discover, ctx.log);
+    url = found.url;
+  }
+  if (!url) throw new Error('no URL configured yet');
+  const res = await fetchClarity({ ...feed, url }, ctx);
+  if (found) res.meta.note = `${found.note}; ${res.meta.note || ''}`;
+  res.meta.url = url;
+  return res;
+}
+
+async function fetchClarity(feed, ctx) {
+  const { origin, st, county, eid } = parseClarityUrl(feed.url);
   const filters = ctx.contestFilters || null;
   if (county) {
     const path = `${st}/${county}/${eid}`;
-    const ver = await currentVersion(path);
-    const d = await detailFor(path, ver, { county: county.replace(/_/g, ' '), contestFilters: filters });
+    const ver = await currentVersion(origin, path);
+    const d = await detailFor(origin, path, ver, { county: county.replace(/_/g, ' '), contestFilters: filters });
     return { rows: d.rows, meta: { url: feed.url, sourceUpdatedAt: d.timestamp, note: `version ${ver}` } };
   }
   const path = `${st}/${eid}`;
-  const ver = await currentVersion(path);
+  const ver = await currentVersion(origin, path);
   let counties = [];
   try {
-    const settings = (await get(`${HOST}/${path}/${ver}/json/electionsettings.json`, { conditional: false })).json();
+    const settings = (await get(`${origin}/${path}/${ver}/json/electionsettings.json`, { conditional: false })).json();
     const list = settings?.settings?.electiondetails?.participatingcounties || [];
     counties = list.map((s) => {
       const [name, ceid, cver] = String(s).split('|');
@@ -132,8 +225,8 @@ export async function fetchFeed(feed, ctx = {}) {
       counties.slice(i, i + limit).map(async (c) => {
         try {
           const cpath = `${st}/${c.name}/${c.ceid}`;
-          const ver2 = c.cver && /^\d+$/.test(c.cver) ? c.cver : await currentVersion(cpath);
-          const d = await detailFor(cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
+          const ver2 = c.cver && /^\d+$/.test(c.cver) ? c.cver : await currentVersion(origin, cpath);
+          const d = await detailFor(origin, cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
           rows.push(...d.rows);
           covered.add(c.name.replace(/_/g, ' ').toUpperCase());
           ts = d.timestamp || ts;
@@ -146,7 +239,7 @@ export async function fetchFeed(feed, ctx = {}) {
   // Counties we could not get precinct detail for fall back to the statewide county-level numbers.
   if (!counties.length || failed.length) {
     try {
-      const d = await detailFor(path, ver, { contestFilters: filters });
+      const d = await detailFor(origin, path, ver, { contestFilters: filters });
       ts = ts || d.timestamp;
       for (const r of d.rows) if (r.level === 'county' && !covered.has(String(r.county).toUpperCase())) rows.push(r);
     } catch (e) {

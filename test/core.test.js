@@ -103,8 +103,8 @@ test('units: fusion lines count for the candidate, over/under votes dropped, TOT
 });
 
 test('clarity: URL parsing and detail.xml', () => {
-  assert.deepEqual(parseClarityUrl('https://results.enr.clarityelections.com/SC/123456/web.345435/#/summary'), { st: 'SC', county: null, eid: '123456' });
-  assert.deepEqual(parseClarityUrl('https://results.enr.clarityelections.com/PA/Bucks/123457/web.1/#/'), { st: 'PA', county: 'Bucks', eid: '123457' });
+  assert.deepEqual(parseClarityUrl('https://results.enr.clarityelections.com/SC/123456/web.345435/#/summary'), { origin: 'https://results.enr.clarityelections.com', st: 'SC', county: null, eid: '123456' });
+  assert.deepEqual(parseClarityUrl('https://results.enr.clarityelections.com/PA/Bucks/123457/web.1/#/'), { origin: 'https://results.enr.clarityelections.com', st: 'PA', county: 'Bucks', eid: '123457' });
   const xml = `<ElectionResult><Timestamp>11/3/2026 9:15:03 PM EST</Timestamp><Region>Bucks</Region>
     <Contest key="1" text="Representative in Congress 1st District" voteFor="1">
       <Choice key="1" text="Brian Fitzpatrick" party="REP" totalVotes="30">

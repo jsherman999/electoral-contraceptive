@@ -87,7 +87,7 @@ async function fetchFeeds(needed, sources) {
           return;
         }
         const base = { id, adapter: feed.adapter, url: feed.url || null, fetchedAt, note: feed.note };
-        if (!feed.url) {
+        if (!feed.url && !feed.discover) {
           status[id] = { ...base, ok: false, configured: false, error: 'no URL configured yet' };
           return;
         }
@@ -100,7 +100,7 @@ async function fetchFeeds(needed, sources) {
         try {
           const res = await adapter.fetchFeed(feed, { contestFilters: needed.get(id), log, previous: feedCache.get(id) });
           feedCache.set(id, { ...res, fetchedAt });
-          status[id] = { ...base, ok: true, rows: res.rows.length, sourceUpdatedAt: res.meta?.sourceUpdatedAt || null, note: res.meta?.note || feed.note, ms: Date.now() - t0 };
+          status[id] = { ...base, url: res.meta?.url || base.url, ok: true, rows: res.rows.length, sourceUpdatedAt: res.meta?.sourceUpdatedAt || null, note: res.meta?.note || feed.note, ms: Date.now() - t0 };
           if (VERBOSE) log(`feed ${id}: ${res.rows.length} rows in ${Date.now() - t0} ms`);
         } catch (e) {
           const prev = feedCache.get(id);

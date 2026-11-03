@@ -19,12 +19,54 @@
     },
     "va": {
       "adapter": "enhanced-voting",
-      "url": "",
-      "hint": "Virginia ELECT results site. Paste the election's public results URL; if it is not an Enhanced Voting site, switch the adapter to json or delimited."
+      "url": "https://enr.elections.virginia.gov/results/public/Virginia/elections/2026NovemberGeneral",
+      "note": "Virginia ELECT (Enhanced Voting). Slug follows the 2024 site (2024NovemberGeneral); confirm on the night."
     },
-    "sc": { "adapter": "clarity", "url": "", "hint": "SC Election Commission results (Clarity). Paste the statewide results URL, e.g. https://results.enr.clarityelections.com/SC/<id>/web.<n>/#/summary" },
-    "co": { "adapter": "clarity", "url": "", "hint": "Colorado SOS results (Clarity). Paste the statewide results URL." },
-    "ia": { "adapter": "clarity", "url": "", "hint": "Iowa SOS results (Clarity). Paste the statewide results URL." },
+    "sc": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": {
+        "state": "SC",
+        "date": "2026-11-03",
+        "pages": [
+          "https://www.enr-scvotes.org/SC/",
+          "https://scvotes.gov/",
+          "https://scvotes.gov/election-results/",
+          "https://www.yorkcountysc.gov/1348/2026-Statewide-General-Election"
+        ]
+      },
+      "note": "SC Election Commission on Clarity (www.enr-scvotes.org; the 2024 general was /SC/122436/). Tonight's election is found automatically; pasting the URL here overrides that."
+    },
+    "co": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": {
+        "state": "CO",
+        "date": "2026-11-03",
+        "pages": [
+          "https://results.enr.clarityelections.com/CO/",
+          "https://www.coloradosos.gov/pubs/elections/main.html",
+          "https://www.sos.state.co.us/pubs/elections/main.html",
+          "https://coloradosos.gov/pubs/newsRoom/pressReleases/2026/PR20261102ElectionResults.html"
+        ]
+      },
+      "note": "Colorado SOS election night reporting (Clarity). Found automatically; pasting the URL here overrides that."
+    },
+    "ia": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": {
+        "state": "IA",
+        "date": "2026-11-03",
+        "pages": [
+          "https://results.enr.clarityelections.com/IA/",
+          "https://electionresults.iowa.gov/IA/",
+          "https://sos.iowa.gov/elections/results/index.html",
+          "https://www.crawfordcounty.iowa.gov/elections/info/2026_general_election_2026_11_03/"
+        ]
+      },
+      "note": "Iowa SOS election night reporting (Clarity). Found automatically; pasting the URL here overrides that."
+    },
     "ky": { "adapter": "clarity", "url": "", "hint": "Kentucky: state results are county level; use county clerk pages (Clarity county URLs work, add one feed per county)." },
     "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov) or county pages. Configure json/delimited mapping." },
     "oh": { "adapter": "clarity", "url": "", "hint": "Ohio: county boards of elections (Hamilton, Montgomery, Lucas, Summit...). One feed per county." },
