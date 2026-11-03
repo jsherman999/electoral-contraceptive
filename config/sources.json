@@ -65,8 +65,8 @@
       },
       "note": "Iowa SOS election night reporting (Clarity), 2026 General = IA/127077 (from the results site, Nov 3). The host often challenges GitHub; relay from home with --feeds ...,ia"
     },
-    "ky": { "adapter": "clarity", "url": "", "hint": "Kentucky: state results are county level; use county clerk pages (Clarity county URLs work, add one feed per county)." },
-    "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov) or county pages. Configure json/delimited mapping." },
+    "ky": { "adapter": "json", "url": "", "hint": "Kentucky's live results (vrsws.sos.ky.gov/liveresults, XML data at /liveresults/data) refuse GitHub (HTTP 403); being checked from a home connection." },
+    "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov/site/) answers GitHub; its data-file names are still being worked out." },
     "oh": {
       "adapter": "cdf",
       "url": "https://liveresults.ohiosos.gov/Api/v1/download?filename=VSSC1622XmlFileBlob",
@@ -77,6 +77,11 @@
       "adapter": "delimited",
       "url": "",
       "hint": "No automated source: the state results site (mvic.sos.state.mi.us) refuses scripted requests from GitHub and from home connections (HTTP 403), and mielections.us no longer answers. Set an adapter and url here if a usable county or state data file turns up."
+    },
+    "mi-macomb": {
+      "adapter": "clarity",
+      "url": "https://results.enr.clarityelections.com/MI/Macomb/127293/",
+      "note": "Macomb County Clerk unofficial detailed results (Clarity), precinct level; linked from macombgov.org/departments/clerk-register-deeds/elections on Nov 3. Macomb is 250 of MI-10's 288 precincts. Clarity often challenges GitHub; relay from home with --feeds ...,mi-macomb"
     },
     "nj": { "adapter": "clarity", "url": "", "hint": "New Jersey: county clerks. One feed per county." },
     "tx": {
@@ -94,6 +99,7 @@
     "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." },
     "oh-relay": { "adapter": "relay", "file": "relay/oh.json", "note": "Ohio results relayed from a home computer (collector/relay.js)" },
     "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "maxAgeMinutes": 720, "note": "Michigan results imported by hand (collector/manual.js); trusted for 12 hours" },
+    "mi-macomb-relay": { "adapter": "relay", "file": "relay/mi-macomb.json", "note": "Macomb County results relayed from a home computer (collector/relay.js --feeds ...,mi-macomb)" },
     "sc-relay": { "adapter": "relay", "file": "relay/sc.json", "note": "South Carolina results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "co-relay": { "adapter": "relay", "file": "relay/co.json", "note": "Colorado results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "ia-relay": { "adapter": "relay", "file": "relay/ia.json", "note": "Iowa results relayed from a home computer (collector/relay.js --feeds ...,ia)" },
@@ -112,7 +118,7 @@
     "IN": ["in"],
     "OH": [["oh", "oh-relay"]],
     "PA": ["pa"],
-    "MI": [["mi", "mi-relay"]],
+    "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"]],
     "NJ": ["nj"],
     "TX": ["tx"],
     "ME": ["me"],

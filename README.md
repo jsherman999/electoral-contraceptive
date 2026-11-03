@@ -70,8 +70,10 @@ caffeinate -i node collector/relay.js --feeds oh,sc,co   # also SC and CO, if yo
   board's Sources line says the relay stopped.
 - If a site refuses your computer too, the relay says so and retries every 5 minutes. It doesn't try
   to get around the refusal.
-- **Michigan** can't be relayed. Its results site (mvic.sos.state.mi.us) returns 403 to scripts even
-  from a home connection, and the old mielections.us site no longer answers.
+- **Michigan statewide** can't be relayed. Its results site (mvic.sos.state.mi.us) returns 403 to
+  scripts even from a home connection, and the old mielections.us site no longer answers. Some counties
+  publish precinct results on Clarity, which can be relayed: **Macomb** (250 of MI-10's 288 precincts)
+  is set up as feed `mi-macomb`, so add it with `--feeds oh,sc,co,ia,mi-macomb`.
 - **South Carolina and Colorado** (Clarity) answer automated requests with a bot challenge, at least
   from GitHub. Check whether your connection gets plain data with
   `node collector/probe.js https://www.enr-scvotes.org/SC/127227/current_ver.txt https://results.enr.clarityelections.com/CO/127407/current_ver.txt`.

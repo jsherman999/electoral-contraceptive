@@ -103,7 +103,7 @@ async function fetchFeeds(needed, sources) {
         }
         const base = { id, adapter: feed.adapter, url: feed.url || null, fetchedAt, note: feed.note };
         if (!feed.url && !feed.discover && !feed.file) {
-          status[id] = { ...base, ok: false, configured: false, error: 'no URL configured yet' };
+          status[id] = { ...base, ok: false, configured: false, error: feed.hint ? `no URL configured yet: ${feed.hint}` : 'no URL configured yet' };
           return;
         }
         const adapter = ADAPTERS[feed.adapter];
