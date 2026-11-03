@@ -123,10 +123,10 @@ test('clarity discovery never uses an election whose date it could not confirm',
   const srv = http.createServer((req, res) => {
     const base = `http://127.0.0.1:${srv.address().port}`;
     const routes = {
-      '/county': `<a href="${base}/MI/Oakland/127074/web.345435/#/summary">Official Election Results</a>`,
-      '/MI/Oakland/127074/current_ver.txt': '3',
-      '/MI/Oakland/127074/3/json/en/electionsettings.json': JSON.stringify({ settings: { electiondetails: { electiondate: '8/4/2026' } } }),
-      '/MI/Oakland/127074/3/json/en/summary.json': JSON.stringify([{ C: 'United States Senator' }]),
+      '/county': `<a href="${base}/MI/Kent/127074/web.345435/#/summary">Official Election Results</a>`,
+      '/MI/Kent/127074/current_ver.txt': '3',
+      '/MI/Kent/127074/3/json/en/electionsettings.json': JSON.stringify({ settings: { electiondetails: { electiondate: '8/4/2026' } } }),
+      '/MI/Kent/127074/3/json/en/summary.json': JSON.stringify([{ C: 'United States Senator' }]),
     };
     const body = routes[req.url];
     if (body == null) res.writeHead(404).end('nf');
@@ -135,7 +135,7 @@ test('clarity discovery never uses an election whose date it could not confirm',
   await new Promise((r) => srv.listen(0, '127.0.0.1', r));
   try {
     const base = `http://127.0.0.1:${srv.address().port}`;
-    const feed = { adapter: 'clarity', discover: { state: 'MI', county: 'Oakland', date: '2026-11-03', pages: [`${base}/county`], hostPattern: '127\\.0\\.0\\.1' } };
+    const feed = { adapter: 'clarity', discover: { state: 'MI', county: 'Kent', date: '2026-11-03', pages: [`${base}/county`], hostPattern: '127\\.0\\.0\\.1' } };
     await assert.rejects(fetchFeed(feed, {}), /could not find the 2026-11-03 election/);
   } finally {
     srv.close();
