@@ -49,6 +49,7 @@ export function buildUnits(rows, opts = {}) {
         live: {},
       };
       if (isCounty && (r.prTot || r.prRep)) u.pr = { tot: r.prTot || 0, rep: r.prRep || 0 };
+      if (isCounty && r.prUnknown) u.prUnknown = true; // feed has no precinct counts (Indiana)
       units.set(key, u);
     }
     const m = normMode(r.mode);

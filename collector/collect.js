@@ -189,7 +189,8 @@ async function runOnce(outDir) {
     const built = buildUnits(rows, { candidates: cfg.candidates || plan.find((p) => p.candidates)?.candidates });
     const { candidates, contests } = built;
     const idx = loadBaseline(baselineDir, id.slice(0, 2));
-    const { units } = attachBaseline(built.units, idx, { statewide: /-SEN$/.test(id) });
+    const dist = Number(id.split('-')[1]);
+    const { units } = attachBaseline(built.units, idx, { statewide: /-SEN$/.test(id), district: Number.isFinite(dist) ? dist : null });
     const feeds = plan.map((p) => ({ ...(feedStatus[p.feed] || { id: p.feed, ok: false }), contests: contests.length ? contests : undefined }));
     if (!units.length && plan.length && feeds.some((f) => f.ok)) feeds.forEach((f) => f.ok && (f.note = `no contest matched ${p_re(plan)}`));
     const { summary, detail } = buildRace(id, units, { now, candidates, call: calls[id] || null, feeds, history: histories.get(id) || [] });

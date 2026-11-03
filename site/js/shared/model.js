@@ -152,8 +152,11 @@ export function analyzeRace(units, opts = {}) {
     }
     if (!u.v) {
       if (u.lvl === 'county' && u.pr) {
-        k.n += u.pr.tot || 0;
-        k.full += Math.min(u.pr.rep || 0, u.pr.tot || 0);
+        const n = u.pr.tot || 0;
+        const rep = Math.min(u.pr.rep || 0, n);
+        k.n += n;
+        k.full += rep;
+        k.none += n - rep; // precincts in a county total that haven't reported yet
       } else {
         k.n += 1;
         if (status === 'F') k.full += 1;

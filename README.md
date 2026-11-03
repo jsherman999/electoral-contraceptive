@@ -190,6 +190,8 @@ my best reading of the graphic, so check them.
 - Precinct boundaries and names change between elections. Unmatched precincts count toward totals but
   not toward swing. Treat a match rate under about 70% with caution.
 - County-level feeds (Florida's state file) compare a county only once all its precincts are in.
+  Indiana publishes county totals with no precinct counts, so its races show margins all night and the
+  shift against 2024 only once the state marks the U.S. House count fully reported.
 - In split counties, 2024 batches (`batch~`) are an estimate.
 - The board polls GitHub's API once per refresh (60 requests per hour without logging in). If that runs
   out, it reads the branch through the CDN, which can lag up to about 5 minutes.

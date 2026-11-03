@@ -56,7 +56,7 @@ export function loadBaseline(dir, st) {
     const ck = countyKey(county);
     let c = idx.counties.get(ck);
     if (!c) {
-      c = { key: ck, name: county, exact: new Map(), alt: new Map(), real: 0, pres: null, house: null, vpres: null, vhouse: null, rpres: [0, 0, 0], rhouse: [0, 0, 0], rmpres: null, rmhouse: null };
+      c = { key: ck, name: county, exact: new Map(), alt: new Map(), real: 0, byDist: new Map(), pres: null, house: null, vpres: null, vhouse: null, rpres: [0, 0, 0], rhouse: [0, 0, 0], rmpres: null, rmhouse: null };
       idx.counties.set(ck, c);
     }
     const keys = precinctKeys(precinct);
@@ -68,6 +68,7 @@ export function loadBaseline(dir, st) {
       c.vhouse = addCells(c.vhouse, house);
     } else {
       c.real += 1;
+      if (hd != null) c.byDist.set(Number(hd), (c.byDist.get(Number(hd)) || 0) + 1);
       c.rmpres = addCells(c.rmpres, pres);
       c.rmhouse = addCells(c.rmhouse, house);
       sumInto(c.rpres, sumCells(pres));
@@ -137,7 +138,11 @@ export function attachBaseline(units, idx, opts = {}) {
     if (u.lvl === 'county' || u.p == null) {
       // A county-level result can only be compared with the whole county's 2024 vote if the race covers
       // (nearly) the whole county: always true statewide; for a district, judged from precinct counts.
-      const whole = opts.statewide || (u.pr && u.pr.tot > 0 && c.real > 0 && u.pr.tot >= 0.85 * c.real);
+      // Feeds without precinct counts (Indiana) fall back to the 2024 district lines, which is only valid
+      // where the map hasn't changed since 2024; the adapter says so by setting prUnknown.
+      const byCounts = !u.prUnknown && u.pr && u.pr.tot > 0 && c.real > 0 && u.pr.tot >= 0.85 * c.real;
+      const byLines = u.prUnknown && opts.district != null && c.real > 0 && (c.byDist.get(opts.district) || 0) >= 0.85 * c.real;
+      const whole = opts.statewide || byCounts || byLines;
       if (whole) {
         Object.assign(u, { b: c.pres, bh: c.house, mk: 'county' });
         matched += 1;

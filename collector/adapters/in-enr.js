@@ -7,6 +7,8 @@
 // The site gives no precincts-reporting count per county, so a county total isn't known to be final
 // until the office is marked ALLREPORTED. Rows carry prTot 1 / prRep 0 until then, which keeps the
 // model from comparing partial county totals (early and absentee votes come first) with 2024.
+// prUnknown tells the baseline step to judge which counties lie wholly in a district from the 2024
+// lines, which is valid because Indiana still uses its 2022 congressional map.
 // Config: { "adapter": "in-enr", "url": "https://enr.indianavoters.in.gov/site/", "categories": ["1005"] }
 import { get } from '../lib/http.js';
 
@@ -37,6 +39,7 @@ export function parseOfficeCategory(json, ctx = {}, allReported = false) {
           votes: num(c.TOTAL_VOTES ?? c.TOTAL),
           prTot: 1,
           prRep: allReported ? 1 : 0,
+          prUnknown: true, // no precinct counts: whole counties are judged from the 2024 district lines
         });
       }
     }
