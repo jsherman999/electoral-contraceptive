@@ -159,7 +159,7 @@
     "IN": ["in"],
     "OH": [["oh", "oh-relay"]],
     "PA": ["pa"],
-    "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"], ["mi-oakland", "mi-oakland-relay"], ["mi-eaton", "mi-eaton-relay"], "mi-vanburen", "mi-shiawassee", "mi-ingham"],
+    "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"], ["mi-eaton", "mi-eaton-relay"], "mi-vanburen", "mi-shiawassee", "mi-ingham"],
     "NJ": ["nj"],
     "TX": ["tx"],
     "ME": ["me"],
