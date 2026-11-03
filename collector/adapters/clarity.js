@@ -31,6 +31,8 @@ async function currentVersion(origin, path) {
   return v;
 }
 
+const countyCache = new Map(); // county detail by results version, so unchanged counties aren't refetched
+
 // ---------------------------------------------------------------- discovery
 const discovered = new Map(); // feed key -> { url, verified, at }
 
@@ -239,13 +241,20 @@ async function fetchClarity(feed, ctx) {
   let ts = null;
   const covered = new Set();
   const limit = feed.concurrency || 6;
+  const filterKey = (filters || []).map((re) => re.source).join('|');
+  let reused = 0;
   for (let i = 0; i < counties.length; i += limit) {
     await Promise.all(
       counties.slice(i, i + limit).map(async (c) => {
         try {
           const cpath = `${st}/${c.name}/${c.ceid}`;
           const ver2 = c.cver && /^\d+$/.test(c.cver) ? c.cver : await currentVersion(origin, cpath);
-          const d = await detailFor(origin, cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
+          // Only download a county's precinct file when its results version changes.
+          const key = `${origin}/${cpath}|${filterKey}`;
+          const hit = countyCache.get(key);
+          const d = hit && hit.ver === ver2 ? hit.d : await detailFor(origin, cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
+          if (!hit || hit.ver !== ver2) countyCache.set(key, { ver: ver2, d });
+          else reused += 1;
           rows.push(...d.rows);
           covered.add(c.name.replace(/_/g, ' ').toUpperCase());
           ts = d.timestamp || ts;
@@ -270,7 +279,7 @@ async function fetchClarity(feed, ctx) {
     meta: {
       url: feed.url,
       sourceUpdatedAt: ts,
-      note: `${covered.size} county precinct files${failed.length ? `; ${failed.length} failed (${failed.slice(0, 3).join('; ')})` : ''}`,
+      note: `${covered.size} county precinct files (${reused} unchanged)${failed.length ? `; ${failed.length} failed (${failed.slice(0, 3).join('; ')})` : ''}`,
     },
   };
 }

@@ -98,6 +98,7 @@
     "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "note": "Michigan results relayed from a home computer (collector/relay.js)" },
     "sc-relay": { "adapter": "relay", "file": "relay/sc.json", "note": "South Carolina results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "co-relay": { "adapter": "relay", "file": "relay/co.json", "note": "Colorado results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
+    "ia-relay": { "adapter": "relay", "file": "relay/ia.json", "note": "Iowa results relayed from a home computer (collector/relay.js --feeds ...,ia)" },
     "ks": { "adapter": "json", "url": "", "hint": "Kansas SOS election night results (Senate race only on this board)." },
     "ak": { "adapter": "json", "url": "", "hint": "Alaska Division of Elections results (Senate race only on this board; polls close 12 am ET)." }
   },
@@ -108,7 +109,7 @@
     "VA": ["va"],
     "SC": [["sc", "sc-relay"]],
     "CO": [["co", "co-relay"]],
-    "IA": ["ia"],
+    "IA": [["ia", "ia-relay"]],
     "KY": ["ky"],
     "IN": ["in"],
     "OH": [["oh", "oh-relay"]],
