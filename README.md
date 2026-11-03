@@ -62,16 +62,20 @@ On a Mac (Node 18+: `brew install node`), from a clone you can push to:
 ```bash
 git clone https://github.com/jsherman999/electoral-contraceptive && cd electoral-contraceptive
 node collector/relay.js --feeds oh --once   # test: one Ohio pass, pushed to election-data-relay
-caffeinate -i node collector/relay.js       # all night: Ohio + Michigan every 90 s (caffeinate keeps the Mac awake)
+caffeinate -i node collector/relay.js       # all night: Ohio every 90 s (caffeinate keeps the Mac awake)
+caffeinate -i node collector/relay.js --feeds oh,sc,co   # also SC and CO, if your connection gets through
 ```
 
 - Leave it running in a Terminal window. If it stops, relayed data is ignored after 15 minutes, and the
   board's Sources line says the relay stopped.
 - If a site refuses your computer too, the relay says so and retries every 5 minutes. It doesn't try
   to get around the refusal.
-- **Michigan** has no data URL configured yet. Find it with
-  `node collector/probe.js https://mielections.us/election/results/`, then set `feeds.mi` in
-  `config/sources.json` (adapter and URL) and commit. The relay picks it up on its next pass.
+- **Michigan** can't be relayed. Its results site (mvic.sos.state.mi.us) returns 403 to scripts even
+  from a home connection, and the old mielections.us site no longer answers.
+- **South Carolina and Colorado** (Clarity) answer automated requests with a bot challenge, at least
+  from GitHub. Check whether your connection gets plain data with
+  `node collector/probe.js https://www.enr-scvotes.org/SC/127227/current_ver.txt https://results.enr.clarityelections.com/CO/127407/current_ver.txt`.
+  If each prints a short number, add `sc,co` to `--feeds`.
 - Run it on one computer only.
 
 ## Adding feeds on election night

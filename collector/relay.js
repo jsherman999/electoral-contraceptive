@@ -3,11 +3,12 @@
 // parsed rows to the election-data-relay branch. The GitHub collector reads them back (relay adapter)
 // and uses them whenever its own direct fetch fails, so the board on GitHub Pages shows them.
 //
-//   node collector/relay.js                     # relay Ohio and Michigan every 90 s
+//   node collector/relay.js                     # relay Ohio every 90 s
+//   node collector/relay.js --feeds oh,sc,co    # also South Carolina and Colorado (if your connection gets through)
 //   node collector/relay.js --feeds oh --once   # one pass, Ohio only (good first test)
 //   node collector/relay.js --no-push           # fetch and write files, but don't push
 //
-// Options: --feeds oh,mi  --interval 90  --branch election-data-relay  --dir .relay  --once  --no-push
+// Options: --feeds oh  --interval 90  --branch election-data-relay  --dir .relay  --once  --no-push
 //          --label "home relay" (how the board's Sources line describes this relay)
 // Needs: Node 18+, a clone of this repo you can push to. On a Mac, keep it awake with:
 //   caffeinate -i node collector/relay.js
@@ -36,7 +37,7 @@ const opt = (k, d) => {
 const log = (...a) => console.log(new Date().toLocaleTimeString(), ...a);
 const readJSON = (f) => JSON.parse(fs.readFileSync(path.join(root, f), 'utf8'));
 
-const feedIds = opt('--feeds', 'oh,mi').split(',').map((s) => s.trim()).filter(Boolean);
+const feedIds = opt('--feeds', 'oh').split(',').map((s) => s.trim()).filter(Boolean);
 const interval = Number(opt('--interval', 90)) * 1000;
 const branch = opt('--branch', 'election-data-relay');
 const dir = path.resolve(root, opt('--dir', '.relay'));
