@@ -14,13 +14,15 @@
     },
     "ga": {
       "adapter": "enhanced-voting",
-      "url": "https://results.sos.ga.gov/results/public/Georgia/elections/2026NovGen",
-      "note": "Georgia SOS (Enhanced Voting). URL follows the 2024 pattern (2024NovGen); confirm on the night."
+      "url": "https://results.sos.ga.gov/results/public/Georgia/elections/11032026GeneralAndSpecialElection",
+      "date": "2026-11-03",
+      "note": "Georgia SOS (Enhanced Voting). Election ID from the site's own election list on Nov 3."
     },
     "va": {
       "adapter": "enhanced-voting",
-      "url": "https://enr.elections.virginia.gov/results/public/Virginia/elections/2026NovemberGeneral",
-      "note": "Virginia ELECT (Enhanced Voting). Slug follows the 2024 site (2024NovemberGeneral); confirm on the night."
+      "url": "https://enr.elections.virginia.gov/results/public/Virginia/elections/2026-November-General",
+      "date": "2026-11-03",
+      "note": "Virginia ELECT (Enhanced Voting). Election ID from the site's own election list on Nov 3."
     },
     "sc": {
       "adapter": "clarity",

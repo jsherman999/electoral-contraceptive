@@ -109,7 +109,7 @@ async function fetchFeeds(needed, sources) {
           feedCache.set(id, { ...res, fetchedAt });
           blockedUntil.delete(id);
           status[id] = { ...base, url: res.meta?.url || base.url, ok: true, rows: res.rows.length, sourceUpdatedAt: res.meta?.sourceUpdatedAt || null, note: res.meta?.note || feed.note, ms: Date.now() - t0 };
-          if (VERBOSE) log(`feed ${id}: ${res.rows.length} rows in ${Date.now() - t0} ms`);
+          log(`feed ${id}: ${res.rows.length} rows in ${Date.now() - t0} ms${res.notModified ? ' (unchanged)' : ''}`);
         } catch (e) {
           const prev = feedCache.get(id);
           const blocked = e.blocked || /bot protection/.test(e.message);
@@ -181,6 +181,8 @@ async function runOnce(outDir) {
     writeJSON(path.join(outDir, 'races', `${id}.json`), detail);
     races[id] = summary;
   }
+  const found = Object.values(races).filter((r) => r.precincts.total > 0);
+  if (found.length) log(`races with precincts: ${found.map((r) => `${r.id} (${r.precincts.total}, ${Math.round((r.match.rate || 0) * 100)}% matched)`).join(', ')}`);
   const ns = nationalSwing(Object.values(races));
   writeJSON(path.join(outDir, 'summary.json'), { generatedAt: now, mode: 'live', national: ns, feeds: feedStatus, races });
   const counting = Object.values(races).filter((r) => r.votes.T > 0).length;
