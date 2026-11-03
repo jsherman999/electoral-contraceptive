@@ -47,6 +47,9 @@ for (const url of process.argv.slice(2)) {
     console.log(`links (${links.size}):`);
     for (const l of list) console.log(`  ${l}`);
   } catch (e) {
-    console.log(`error: ${e.message}`);
+    // fetch() reports network problems as "fetch failed"; the reason is in e.cause.
+    const c = e.cause;
+    const why = c ? ` (${[c.code, c.message].filter(Boolean).join(': ')}${c.cause ? `; ${c.cause.code || c.cause.message}` : ''})` : '';
+    console.log(`error: ${e.message}${why}`);
   }
 }
