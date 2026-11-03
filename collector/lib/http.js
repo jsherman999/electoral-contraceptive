@@ -27,6 +27,15 @@ export async function get(url, { timeoutMs = 45000, retries = 3, conditional = t
         const e = new Error(`HTTP ${res.status} for ${url}`);
         e.status = res.status;
         e.fatal = res.status === 404 || res.status === 403 || res.status === 401;
+        e.blocked = res.status === 403;
+        throw e;
+      }
+      // AWS WAF bot control answers automated clients with a 202 JavaScript challenge page instead of
+      // the data. Report it as blocked; the collector does not try to get around it.
+      if (res.status === 202 && /awsWafCookieDomainList|gokuProps/.test(buf.subarray(0, 4000).toString('utf8'))) {
+        const e = new Error(`blocked by the site's bot protection (AWS WAF challenge) at ${new URL(url).host}`);
+        e.fatal = true;
+        e.blocked = true;
         throw e;
       }
       if (conditional) {

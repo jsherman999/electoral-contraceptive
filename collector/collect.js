@@ -72,6 +72,7 @@ function racePlan(id, sources) {
 
 // ------------------------------------------------------------------ feeds
 const feedCache = new Map(); // feed id -> last good { rows, meta, fetchedAt }
+const blockedUntil = new Map(); // feed id -> { until, error, key }
 
 async function fetchFeeds(needed, sources) {
   const status = {};
@@ -96,15 +97,24 @@ async function fetchFeeds(needed, sources) {
           status[id] = { ...base, ok: false, error: `unknown adapter "${feed.adapter}"` };
           return;
         }
+        // A site that refused automated access is only asked again every 10 minutes.
+        const wait = blockedUntil.get(id);
+        if (wait && Date.now() < wait.until && wait.key === JSON.stringify(feed)) {
+          status[id] = { ...base, ok: false, blocked: true, error: `${wait.error}; next try ${new Date(wait.until).toISOString().slice(11, 16)} UTC` };
+          return;
+        }
         const t0 = Date.now();
         try {
           const res = await adapter.fetchFeed(feed, { contestFilters: needed.get(id), log, previous: feedCache.get(id) });
           feedCache.set(id, { ...res, fetchedAt });
+          blockedUntil.delete(id);
           status[id] = { ...base, url: res.meta?.url || base.url, ok: true, rows: res.rows.length, sourceUpdatedAt: res.meta?.sourceUpdatedAt || null, note: res.meta?.note || feed.note, ms: Date.now() - t0 };
           if (VERBOSE) log(`feed ${id}: ${res.rows.length} rows in ${Date.now() - t0} ms`);
         } catch (e) {
           const prev = feedCache.get(id);
-          status[id] = { ...base, ok: false, error: e.message, stale: prev ? prev.fetchedAt : null };
+          const blocked = e.blocked || /bot protection/.test(e.message);
+          if (blocked) blockedUntil.set(id, { until: Date.now() + 10 * 60000, error: e.message, key: JSON.stringify(feed) });
+          status[id] = { ...base, ok: false, blocked: blocked || undefined, error: e.message, stale: prev ? prev.fetchedAt : null };
           log(`feed ${id} failed: ${e.message}${prev ? ' (using last good copy)' : ''}`);
         }
       })

@@ -73,6 +73,7 @@ export async function discover(cfg, log = () => {}) {
   const ranked = [...cands.values()].sort((a, b) => b.eid - a.eid).slice(0, 8);
   let fallback = null;
   const tried = [];
+  let blockedErr = null;
   for (const c of ranked) {
     tried.push(`${c.origin}/${st}/${c.eid}`);
     try {
@@ -95,6 +96,7 @@ export async function discover(cfg, log = () => {}) {
         return hit;
       }
     } catch (e) {
+      if (e.blocked) blockedErr = e;
       tried[tried.length - 1] += ` (${e.message.replace(/ for https?:\S+/, '').slice(0, 50)})`;
     }
   }
@@ -103,6 +105,11 @@ export async function discover(cfg, log = () => {}) {
     const hit = { url: fallback, verified: false, note: `using newest election found, ${fallback}, date not confirmed (${seen.join('; ')})` };
     log(`clarity ${st}: ${hit.note}`);
     return hit;
+  }
+  if (blockedErr) {
+    const e = new Error(`${blockedErr.message}; newest ${st} election linked: ${ranked[0].origin}/${st}/${ranked[0].eid}/`);
+    e.blocked = true;
+    throw e;
   }
   throw new Error(
     `could not find the ${cfg.date} election (pages: ${seen.join('; ') || 'none configured'}; newest candidates: ${tried.slice(0, 4).join(', ') || 'none'}); paste the results URL into config/sources.json`

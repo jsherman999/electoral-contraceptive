@@ -5,7 +5,7 @@
 import { get } from './lib/http.js';
 
 const LINK = /(?:href|src)\s*=\s*["']([^"'#]+[^"']*)["']/gi;
-const INTERESTING = /result|clarity|enr|election|export|\/[A-Z]{2}\/\d{5,7}|\.json|\.zip|\.txt|\.csv/i;
+const INTERESTING = /result|clarity|enr|election|export|api|\/[A-Z]{2}\/\d{5,7}|\.json|\.zip|\.txt|\.csv|\.js(\?|$)/i;
 
 for (const url of process.argv.slice(2)) {
   console.log(`\n=== ${url}`);
@@ -15,7 +15,20 @@ for (const url of process.argv.slice(2)) {
     console.log(`status ${res.status} · ${res.headers.get('content-type')} · ${res.buf.length} bytes`);
     console.log(`snippet: ${text.replace(/\s+/g, ' ').slice(0, 400)}`);
     const links = new Set();
-    for (const m of text.matchAll(LINK)) if (INTERESTING.test(m[1])) links.add(new URL(m[1], url).href);
+    const base = (text.match(/<base\s+href=["']([^"']+)["']/i) || [])[1];
+    const baseUrl = base ? new URL(base, url).href : url;
+    for (const m of text.matchAll(LINK)) {
+      const abs = new URL(m[1], baseUrl).href;
+      if (INTERESTING.test(abs)) links.add(abs);
+    }
+    // GREP="regex" prints matching snippets, e.g. API paths inside a JavaScript bundle.
+    if (process.env.GREP) {
+      const re = new RegExp(process.env.GREP, 'g');
+      const hits = new Set();
+      for (const m of text.matchAll(re)) hits.add(text.slice(Math.max(0, m.index - 60), m.index + 120).replace(/\s+/g, ' '));
+      console.log(`grep /${process.env.GREP}/ (${hits.size}):`);
+      for (const h of [...hits].slice(0, 40)) console.log(`  ...${h}...`);
+    }
     for (const m of text.matchAll(/https?:\/\/[^\s"'<>]+/g)) if (INTERESTING.test(m[0])) links.add(m[0]);
     const list = [...links].slice(0, 80);
     console.log(`links (${links.size}):`);

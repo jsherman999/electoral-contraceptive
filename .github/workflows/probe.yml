@@ -9,6 +9,10 @@ on:
       urls:
         description: Space-separated URLs to fetch
         required: true
+      grep:
+        description: Optional regex; prints matching snippets from each response
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -24,4 +28,5 @@ jobs:
       - name: Probe
         env:
           URLS: ${{ inputs.urls }}
+          GREP: ${{ inputs.grep }}
         run: node collector/probe.js $URLS

@@ -62,3 +62,17 @@ test('clarity discovery picks the election on the configured date and reads coun
     srv.close();
   }
 });
+
+test('clarity: a bot-protection challenge is reported as blocked, not parsed', async () => {
+  const srv = http.createServer((req, res) => {
+    res.writeHead(202, { 'content-type': 'text/html' });
+    res.end('<html><script>window.awsWafCookieDomainList = []; window.gokuProps = {"key":"x"};</script></html>');
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/CO/127407/`;
+    await assert.rejects(fetchFeed({ adapter: 'clarity', url }, {}), (e) => e.blocked === true && /bot protection/.test(e.message));
+  } finally {
+    srv.close();
+  }
+});
