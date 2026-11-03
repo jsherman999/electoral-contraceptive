@@ -1,0 +1,27 @@
+name: Probe URLs
+
+# Fetch URLs from GitHub's network and print status, a snippet and any results links.
+# Handy for checking a state's results site before pasting it into config/sources.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: Space-separated URLs to fetch
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe
+        env:
+          URLS: ${{ inputs.urls }}
+        run: node collector/probe.js $URLS

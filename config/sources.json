@@ -31,8 +31,7 @@
         "pages": [
           "https://www.enr-scvotes.org/SC/",
           "https://scvotes.gov/",
-          "https://scvotes.gov/election-results/",
-          "https://www.yorkcountysc.gov/1348/2026-Statewide-General-Election"
+          "https://scvotes.gov/election-results/"
         ]
       },
       "note": "SC Election Commission on Clarity (www.enr-scvotes.org; the 2024 general was /SC/122436/). Tonight's election is found automatically; pasting the URL here overrides that."
@@ -61,7 +60,6 @@
         "pages": [
           "https://results.enr.clarityelections.com/IA/",
           "https://electionresults.iowa.gov/IA/",
-          "https://sos.iowa.gov/elections/results/index.html",
           "https://www.crawfordcounty.iowa.gov/elections/info/2026_general_election_2026_11_03/"
         ]
       },

@@ -72,7 +72,9 @@ export async function discover(cfg, log = () => {}) {
   const dateRe = datePatterns(cfg.date);
   const ranked = [...cands.values()].sort((a, b) => b.eid - a.eid).slice(0, 8);
   let fallback = null;
+  const tried = [];
   for (const c of ranked) {
+    tried.push(`${c.origin}/${st}/${c.eid}`);
     try {
       const ver = await currentVersion(c.origin, `${st}/${c.eid}`);
       const url = `${c.origin}/${st}/${c.eid}/`;
@@ -92,8 +94,8 @@ export async function discover(cfg, log = () => {}) {
         log(`clarity ${st}: ${hit.note}`);
         return hit;
       }
-    } catch {
-      /* not a live Clarity election */
+    } catch (e) {
+      tried[tried.length - 1] += ` (${e.message.replace(/ for https?:\S+/, '').slice(0, 50)})`;
     }
   }
   if (fallback) {
@@ -102,7 +104,9 @@ export async function discover(cfg, log = () => {}) {
     log(`clarity ${st}: ${hit.note}`);
     return hit;
   }
-  throw new Error(`could not find the ${cfg.date} election (${seen.join('; ') || 'no pages configured'}); paste the results URL into config/sources.json`);
+  throw new Error(
+    `could not find the ${cfg.date} election (pages: ${seen.join('; ') || 'none configured'}; newest candidates: ${tried.slice(0, 4).join(', ') || 'none'}); paste the results URL into config/sources.json`
+  );
 }
 
 const attrRe = /([\w:-]+)="([^"]*)"/g;
