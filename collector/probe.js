@@ -11,7 +11,13 @@ for (const url of process.argv.slice(2)) {
   console.log(`\n=== ${url}`);
   try {
     const res = await get(url, { timeoutMs: 30000, retries: 0, conditional: false, headers: { accept: 'text/html,application/json,*/*' } });
-    const text = res.buf.toString('utf8');
+    let text = res.buf.toString('utf8');
+    // Some APIs (Texas Civix) wrap JSON as {"upload": "<base64>"}; show the decoded content.
+    const up = text.match(/^\s*\{\s*"upload"\s*:\s*"([A-Za-z0-9+/=]+)"/);
+    if (up) {
+      text = Buffer.from(up[1], 'base64').toString('utf8');
+      console.log(`(decoded base64 "upload": ${text.length} chars)`);
+    }
     console.log(`status ${res.status} · ${res.headers.get('content-type')} · ${res.buf.length} bytes`);
     console.log(`snippet: ${text.replace(/\s+/g, ' ').slice(0, 400)}`);
     const links = new Set();
