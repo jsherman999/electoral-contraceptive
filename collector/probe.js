@@ -25,7 +25,14 @@ for (const url of process.argv.slice(2)) {
     if (process.env.GREP) {
       const re = new RegExp(process.env.GREP, 'g');
       const hits = new Set();
-      for (const m of text.matchAll(re)) hits.add(text.slice(Math.max(0, m.index - 60), m.index + 120).replace(/\s+/g, ' '));
+      const seenKeys = new Set();
+      for (const m of text.matchAll(re)) {
+        // one snippet per distinct match text, at most 60 in all
+        if (seenKeys.has(m[0])) continue;
+        seenKeys.add(m[0]);
+        hits.add(text.slice(Math.max(0, m.index - 60), m.index + 160).replace(/\s+/g, ' '));
+        if (hits.size >= 60) break;
+      }
       console.log(`grep /${process.env.GREP}/ (${hits.size}):`);
       for (const h of [...hits].slice(0, 40)) console.log(`  ...${h}...`);
     }
