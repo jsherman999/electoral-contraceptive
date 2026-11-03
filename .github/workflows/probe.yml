@@ -13,6 +13,10 @@ on:
         description: Optional regex; prints matching snippets from each response
         required: false
         default: ''
+      shape:
+        description: Print the structure of JSON responses
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,4 +33,5 @@ jobs:
         env:
           URLS: ${{ inputs.urls }}
           GREP: ${{ inputs.grep }}
+          SHAPE: ${{ inputs.shape && '1' || '' }}
         run: node collector/probe.js $URLS

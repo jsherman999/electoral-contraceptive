@@ -2,13 +2,29 @@
 // Fetch URLs and print what came back: status, type, size, a snippet, and any results-looking links.
 // Used through the "Probe URLs" workflow to look at election sites from GitHub's network.
 //   node collector/probe.js <url> [<url> ...]
-//   GREP="regex" prints matching snippets; LINKS="regex" limits the link list.
+//   GREP="regex" prints matching snippets; LINKS="regex" limits the link list; SHAPE=1 prints JSON structure.
 import { get } from './lib/http.js';
 
 const LINK = /(?:href|src)\s*=\s*["']([^"'#]+[^"']*)["']/gi;
 const INTERESTING = /result|clarity|enr|election|export|api|\/[A-Z]{2}\/\d{5,7}|\.json|\.zip|\.txt|\.csv|\.js(\?|$)/i;
 // LINKS="regex" lists only matching links (e.g. LINKS=clarity), to keep the output short.
 const LINKS_RE = process.env.LINKS ? new RegExp(process.env.LINKS, 'i') : INTERESTING;
+
+function printShape(node, path = '', depth = 0, out = { n: 0 }) {
+  if (out.n > 400 || depth > 12) return;
+  if (Array.isArray(node)) {
+    console.log(`${path}[] (${node.length} items)`);
+    out.n += 1;
+    if (node.length) printShape(node[0], `${path}[0]`, depth + 1, out);
+    return;
+  }
+  if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) printShape(v, path ? `${path}.${k}` : k, depth + 1, out);
+    return;
+  }
+  console.log(`${path} = ${JSON.stringify(node)?.slice(0, 80)}`);
+  out.n += 1;
+}
 
 for (const url of process.argv.slice(2)) {
   console.log(`\n=== ${url}`);
@@ -22,6 +38,14 @@ for (const url of process.argv.slice(2)) {
       console.log(`(decoded base64 "upload": ${text.length} chars)`);
     }
     console.log(`status ${res.status} · ${res.headers.get('content-type')} · ${res.buf.length} bytes`);
+    // SHAPE=1 prints a JSON response's structure: every key path, array lengths and sample values.
+    if (process.env.SHAPE) {
+      try {
+        printShape(JSON.parse(text));
+      } catch (e) {
+        console.log(`(not JSON: ${e.message.slice(0, 60)})`);
+      }
+    }
     console.log(`snippet: ${text.replace(/\s+/g, ' ').slice(0, 400)}`);
     const links = new Set();
     const base = (text.match(/<base\s+href=["']([^"']+)["']/i) || [])[1];
