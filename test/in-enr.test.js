@@ -53,6 +53,8 @@ test('in-enr: county rows for the matching district only', () => {
   const { rows, writeTime } = parseOfficeCategory(json, { contestFilters: [contestMatcher('auto', 'IN-05')] });
   assert.equal(writeTime, '2026-11-03T19:12:00');
   assert.equal(rows.length, 3);
-  assert.deepEqual(rows[1], { county: 'Hamilton', precinct: null, level: 'county', contest: 'United States Representative, Fifth District', candidate: 'Victoria Spartz', party: 'R', mode: 'TOTAL', votes: 1050 });
+  assert.deepEqual(rows[1], { county: 'Hamilton', precinct: null, level: 'county', contest: 'United States Representative, Fifth District', candidate: 'Victoria Spartz', party: 'R', mode: 'TOTAL', votes: 1050, prTot: 1, prRep: 0 });
   assert.equal(rows[2].county, 'Madison');
+  // once the office is marked ALLREPORTED, county totals count as final
+  assert.equal(parseOfficeCategory(json, { contestFilters: [contestMatcher('auto', 'IN-05')] }, true).rows[0].prRep, 1);
 });

@@ -1,8 +1,12 @@
 // Indiana Election Division election-night results (enr.indianavoters.in.gov), county level.
 //   data/settings.json             VersionType: the current file suffix ("A" or "B", flips on each update)
 //   data/OffCatC_<id>_<suffix>.json every race in an office category, by district, then by county
+//   data/statewideElectionsC_<suffix>.json  office list with ALLREPORTED per office category
 // Office category 1005 is "US Representative". Contest names come out as the site's OFFICE_TITLE,
 // e.g. "United States Representative, Fifth District".
+// The site gives no precincts-reporting count per county, so a county total isn't known to be final
+// until the office is marked ALLREPORTED. Rows carry prTot 1 / prRep 0 until then, which keeps the
+// model from comparing partial county totals (early and absentee votes come first) with 2024.
 // Config: { "adapter": "in-enr", "url": "https://enr.indianavoters.in.gov/site/", "categories": ["1005"] }
 import { get } from '../lib/http.js';
 
@@ -12,7 +16,7 @@ const num = (x) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export function parseOfficeCategory(json, ctx = {}) {
+export function parseOfficeCategory(json, ctx = {}, allReported = false) {
   const root = json.Root || json;
   const rows = [];
   for (const region of arr(root.OfficeCategory?.Regions?.Region)) {
@@ -31,6 +35,8 @@ export function parseOfficeCategory(json, ctx = {}) {
           party: c.PARTY_ABBREV || c.PARTY || '',
           mode: 'TOTAL',
           votes: num(c.TOTAL_VOTES ?? c.TOTAL),
+          prTot: 1,
+          prRep: allReported ? 1 : 0,
         });
       }
     }
@@ -48,9 +54,17 @@ export async function fetchFeed(feed, ctx = {}) {
   const suffix = s.VersionType || 'A';
   const rows = [];
   let ts = null;
+  const done = new Set();
+  try {
+    const list = (await get(`${base}data/statewideElectionsC_${suffix}.json`, { conditional: false, retries: 1 })).json();
+    for (const group of arr((list.Root || list).List))
+      for (const it of arr(group.Items?.Item)) if (String(it.ALLREPORTED) === '1') done.add(String(it.OFFICECATEGORYID));
+  } catch {
+    /* without the office list, nothing is treated as fully reported */
+  }
   for (const cat of feed.categories || ['1005']) {
     const res = await get(`${base}data/OffCatC_${cat}_${suffix}.json`, { conditional: false, retries: 2, timeoutMs: 60000 });
-    const d = parseOfficeCategory(res.json(), ctx);
+    const d = parseOfficeCategory(res.json(), ctx, done.has(String(cat)));
     rows.push(...d.rows);
     ts = d.writeTime || ts;
   }
@@ -59,7 +73,7 @@ export async function fetchFeed(feed, ctx = {}) {
     meta: {
       url: base,
       sourceUpdatedAt: ts ? `${ts}-05:00` : null,
-      note: `version ${s.VersionCode || '?'} ${suffix}; county level`,
+      note: `version ${s.VersionCode || '?'} ${suffix}; county level${done.size ? '; all reported' : ''}`,
     },
   };
 }
