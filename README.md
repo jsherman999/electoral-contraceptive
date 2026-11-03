@@ -81,9 +81,17 @@ caffeinate -i node collector/relay.js --feeds oh,sc,co   # also SC and CO, if yo
 - If a site refuses your computer too, the relay says so and retries every 5 minutes. It doesn't try
   to get around the refusal.
 - **Michigan statewide** can't be relayed. Its results site (mvic.sos.state.mi.us) returns 403 to
-  scripts even from a home connection, and the old mielections.us site no longer answers. Some counties
-  publish precinct results on Clarity, which can be relayed: **Macomb** (250 of MI-10's 288 precincts)
-  is set up as feed `mi-macomb`, so add it with `--feeds oh,sc,co,ia,mi-macomb`.
+  scripts even from a home connection, and the old mielections.us site no longer answers. County sites
+  fill in the board's Michigan races at precinct level:
+  - **Macomb** (`mi-macomb`), **Oakland** (`mi-oakland`) and **Eaton** (`mi-eaton`) use Clarity, which
+    challenges GitHub, so relay them: `--feeds oh,sc,co,ia,mi-macomb,mi-oakland,mi-eaton`. Oakland and
+    Eaton find tonight's election on the county's page by date, so a linked primary isn't used.
+  - **Van Buren**, **Shiawassee** and **Ingham** use Enhanced Voting, which GitHub reads directly.
+  - Several townships consolidated and renumbered precincts after 2024 (Clinton Twp 42 to 18, Shelby 32
+    to 20, ...). Where a city or township kept the same precincts they are matched one to one; otherwise
+    the whole jurisdiction is compared with its 2024 total once all of its precincts are in.
+- **Kentucky** refuses scripted requests from GitHub and from home connections (HTTP 403), so KY-06
+  needs a manual call in `config/calls.json` or a hand import (below).
 - **South Carolina and Colorado** (Clarity) answer automated requests with a bot challenge, at least
   from GitHub. Check whether your connection gets plain data with
   `node collector/probe.js https://www.enr-scvotes.org/SC/127227/current_ver.txt https://results.enr.clarityelections.com/CO/127407/current_ver.txt`.
