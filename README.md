@@ -78,6 +78,27 @@ caffeinate -i node collector/relay.js --feeds oh,sc,co   # also SC and CO, if yo
   If each prints a short number, add `sc,co` to `--feeds`.
 - Run it on one computer only.
 
+## Importing Michigan (or any state) by hand
+
+Michigan's results site refuses scripts, but you can still use it in a browser. Download or copy the
+results into a CSV, then:
+
+```bash
+node collector/manual.js --state MI --file ~/Downloads/mi-results.csv --dry-run   # check what it found
+node collector/manual.js --state MI --file ~/Downloads/mi-results.csv             # push it
+```
+
+- The importer recognizes common column names (County, Contest/Office/OfficeDescription, District,
+  Candidate or first/last name, Party, Votes/CandidateVotes, optional Precincts and Precincts
+  Reporting). It lists which board races it found. If the site has no download, paste the numbers into
+  a spreadsheet laid out like [`manual/template.csv`](manual/template.csv) and save it as CSV.
+- It pushes to the same `election-data-relay` branch as the relay script. The board shows it within
+  about 90 seconds, for everyone. Imported Michigan data is trusted for 12 hours, so re-import whenever
+  you download fresh numbers.
+- County-level House results are compared with 2024 only for counties wholly in the district. Include
+  the Precincts columns if the download has them; without them, House races show margins only, while
+  the Senate race is compared county by county.
+
 ## Adding feeds on election night
 
 Most states publish their 2026 results URLs only on the night. Feeds live in

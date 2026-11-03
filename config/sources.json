@@ -95,7 +95,7 @@
     "mt": { "adapter": "json", "url": "", "hint": "Montana SOS results (county level)." },
     "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." },
     "oh-relay": { "adapter": "relay", "file": "relay/oh.json", "note": "Ohio results relayed from a home computer (collector/relay.js)" },
-    "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "note": "Michigan results relayed from a home computer (collector/relay.js)" },
+    "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "maxAgeMinutes": 720, "note": "Michigan results imported by hand (collector/manual.js); trusted for 12 hours" },
     "sc-relay": { "adapter": "relay", "file": "relay/sc.json", "note": "South Carolina results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "co-relay": { "adapter": "relay", "file": "relay/co.json", "note": "Colorado results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "ia-relay": { "adapter": "relay", "file": "relay/ia.json", "note": "Iowa results relayed from a home computer (collector/relay.js --feeds ...,ia)" },
