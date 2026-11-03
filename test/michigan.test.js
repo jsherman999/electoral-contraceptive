@@ -4,9 +4,9 @@ import { miBaselineKey, miLiveKey, loadBaseline, attachBaseline } from '../colle
 import { buildRace } from '../site/js/shared/race.js';
 
 test('michigan precinct names parse on both sides', () => {
-  assert.deepEqual(miBaselineKey('SHELBY CHARTER TOWNSHIP 3 Ward 0'), { jur: 'T:SHELBY', num: 3 });
-  assert.deepEqual(miBaselineKey('ST CLAIR SHORES CITY 12 Ward 0'), { jur: 'C:ST CLAIR SHORES', num: 12 });
-  assert.deepEqual(miBaselineKey('MONROE CITY 3 Ward 0N'), { jur: 'C:MONROE', num: 3 });
+  assert.deepEqual(miBaselineKey('SHELBY CHARTER TOWNSHIP 3 Ward 0'), { jur: 'T:SHELBY', num: 3, ward: 0 });
+  assert.deepEqual(miBaselineKey('ST CLAIR SHORES CITY 12 Ward 0'), { jur: 'C:ST CLAIR SHORES', num: 12, ward: 0 });
+  assert.deepEqual(miBaselineKey('MONROE CITY 3 Ward 0N'), { jur: 'C:MONROE', num: 3, ward: 0 });
   assert.equal(miBaselineKey('{Statistical Adjustments} 9999 Ward 0'), null);
   assert.equal(miLiveKey('Shelby Twp, Pct 3').jur, 'T:SHELBY');
   assert.equal(miLiveKey('St. Clair Shores, Pct 12').jur, 'C:ST CLAIR SHORES');
@@ -18,6 +18,10 @@ test('michigan precinct names parse on both sides', () => {
   assert.equal(miLiveKey('Township of Antwerp, Precinct 2').jur, 'T:ANTWERP');
   assert.equal(miLiveKey('Charter Township of Meridian, Precinct 14').jur, 'T:MERIDIAN');
   assert.equal(miBaselineKey('BANGOR CITY 1 Ward 0').jur, 'C:BANGOR');
+  // wards
+  assert.deepEqual(miLiveKey('City of Lansing, Ward 1, Precinct 2'), { jur: 'C:LANSING', num: 2, ward: 1, label: 'Lansing City' });
+  assert.deepEqual(miBaselineKey('SOUTH HAVEN CITY 1 Ward 3'), { jur: 'C:SOUTH HAVEN', num: 1, ward: 3 });
+  assert.equal(miLiveKey('South Haven Charter Township, Precinct 2').jur, 'T:SOUTH HAVEN');
 });
 
 const unit = (p, ed = 0, abs = 0) => ({ c: 'Macomb', p, lvl: 'precinct', v: false, x: null, live: { ED: [ed, ed, 0], MAIL: [abs, abs, 0] } });
@@ -42,6 +46,11 @@ test('michigan: same precinct set matches by number; renumbered townships compar
   assert.equal(summary.match.rate, 1);
 
   clinton[17].live.ED = [120, 120, 0];
+  // South Haven restarts numbering in each ward; same ward/precinct pairs as 2024 -> matched one to one
+  const sh2 = ['City of South Haven, Ward 1, Precinct 1', 'City of South Haven, Ward 2, Precinct 1', 'City of South Haven, Ward 3, Precinct 1', 'City of South Haven, Ward 3, Precinct 2'].map((p) => ({ ...unit(p, 50, 10), c: 'Van Buren' }));
+  const vb = attachBaseline(sh2, idx, { statewide: true }).units;
+  assert.deepEqual(vb.map((u) => u.mk), ['number', 'number', 'number', 'number']);
+
   const done = attachBaseline([...clinton.map((u) => ({ ...u, live: { ...u.live } }))], idx, { statewide: true }).units;
   assert.equal(done.find((u) => u.mk === 'jurisdiction').x, true);
 });

@@ -55,12 +55,12 @@ const miName = (s) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-/** 2024 baseline name -> { jur: "T:SHELBY", num: 3 } */
+/** 2024 baseline name -> { jur: "T:SHELBY", num: 3, ward: 0 } ("SOUTH HAVEN CITY 1 Ward 3" -> ward 3) */
 export function miBaselineKey(name) {
-  const m = String(name).match(/^(.*?)\s+(CHARTER\s+TOWNSHIP|CHARTER\s+TWP|TOWNSHIP|TWP|CITY|VILLAGE)\s+(\d+)(?:\s+WARD\s+\S+)?$/i);
+  const m = String(name).match(/^(.*?)\s+(CHARTER\s+TOWNSHIP|CHARTER\s+TWP|TOWNSHIP|TWP|CITY|VILLAGE)\s+(\d+)(?:\s+WARD\s+(\d*)\S*)?$/i);
   if (!m) return null;
   const type = /CITY/i.test(m[2]) ? 'C' : /VILLAGE/i.test(m[2]) ? 'V' : 'T';
-  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]) };
+  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]), ward: Number(m[4]) || 0 };
 }
 
 /**
@@ -69,12 +69,18 @@ export function miBaselineKey(name) {
  */
 export function miLiveKey(name) {
   let s = String(name).trim();
+  // "City of Lansing, Ward 1, Precinct 2": take the ward out before reading the jurisdiction
+  let ward = 0;
+  s = s.replace(/,?\s*\bWard\s+(\d+)\b\s*,?/i, (_, w) => {
+    ward = Number(w);
+    return ', ';
+  });
   const of = s.match(/^(?:Charter\s+)?(City|Township|Twp|Village)\s+of\s+(.+?)(\s*,.*|\s+(?:Pct|Precinct|Prec)\b.*|\s+#?\d+)$/i);
   if (of) s = `${of[2]} ${of[1]}${of[3]}`;
   const m = s.match(/^(.*?)(?:\s+(Charter\s+Township|Charter\s+Twp|Township|Twp|City|Village))?\s*,?\s*(?:(?:Pct|Precinct|Prec)\.?\s*)?#?\s*0*(\d+)$/i);
   if (!m || !m[1].trim()) return null;
   const type = !m[2] || /CITY/i.test(m[2]) ? 'C' : /VILLAGE/i.test(m[2]) ? 'V' : 'T';
-  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]), label: `${m[1].trim()}${m[2] ? ` ${m[2]}` : ''}` };
+  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]), ward, label: `${m[1].trim()}${m[2] ? ` ${m[2]}` : ''}` };
 }
 
 export function loadBaseline(dir, st) {
@@ -239,11 +245,18 @@ export function attachBaseline(units, idx, opts = {}) {
         for (const [u] of members) out.push(Object.assign(u, { mk: null }));
         continue;
       }
-      const byNum = new Map(recs.map((r) => [r.mi.num, r]));
-      const same = members.length === recs.length && byNum.size === recs.length && members.every(([, k]) => byNum.has(k.num));
+      // Precinct numbers are usually unique in a jurisdiction; some cities restart them in each ward
+      // (South Haven: Ward 2 Precinct 1, Ward 3 Precinct 1), so fall back to ward + number.
+      let keyOf = (k) => String(k.num);
+      let byNum = new Map(recs.map((r) => [keyOf(r.mi), r]));
+      if (byNum.size < recs.length && recs.every((r) => r.mi.ward) && members.every(([, k]) => k.ward)) {
+        keyOf = (k) => `${k.ward}-${k.num}`;
+        byNum = new Map(recs.map((r) => [keyOf(r.mi), r]));
+      }
+      const same = members.length === recs.length && byNum.size === recs.length && members.every(([, k]) => byNum.has(keyOf(k)));
       if (same) {
         for (const [u, k] of members) {
-          const r = byNum.get(k.num);
+          const r = byNum.get(keyOf(k));
           used.add(r.id);
           out.push(Object.assign(u, { _rec: r, _c: c, mk: 'number' }));
         }
