@@ -126,7 +126,9 @@ export async function discover(cfg, log = () => {}) {
       tried[tried.length - 1] += ` (${e.message.replace(/ for https?:\S+/, '').slice(0, 50)})`;
     }
   }
-  if (withContest || fallback) {
+  // An election whose date couldn't be confirmed is never used unless the feed opts in
+  // (discover.allowUnconfirmed): a county page's newest link can be a past election with full results.
+  if (cfg.allowUnconfirmed && (withContest || fallback)) {
     // Not cached, so the next pass tries again to confirm.
     const url = withContest || fallback;
     const hit = { url, verified: false, note: `using ${url}: ${withContest ? 'has federal contests, date not confirmed' : 'newest election found, not confirmed'} (checked ${tried.slice(0, 6).join(', ')})` };

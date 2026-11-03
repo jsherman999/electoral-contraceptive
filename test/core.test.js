@@ -197,3 +197,14 @@ test('county-level results in a split county are not compared with the whole cou
   assert.equal(attachBaseline(whole, idx).units[0].mk, 'county');
   assert.equal(attachBaseline([{ c: 'Adams', p: null, lvl: 'county', live: {} }], idx, { statewide: true }).units[0].mk, 'county');
 });
+
+test('race history starts over when the vote count collapses (a wrong source was withdrawn)', async () => {
+  const { buildRace } = await import('../site/js/shared/race.js');
+  const unit = (d, r) => ({ c: 'X', p: '1', lvl: 'precinct', live: { TOTAL: [d, r, 0] } });
+  const bad = [[1, 365000, 2.9, 2.9, 0.9, 365190]];
+  assert.equal(buildRace('MI-SEN', [unit(0, 0)], { history: bad }).detail.history.length, 0 + 1);
+  assert.equal(buildRace('MI-SEN', [unit(0, 0)], { history: bad }).detail.history[0][5], 0);
+  // a normal increase keeps the history
+  const ok = [[1, 0, null, null, 0, 1000]];
+  assert.equal(buildRace('MI-SEN', [unit(800, 700)], { history: ok }).detail.history.length, 2);
+});

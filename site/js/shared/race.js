@@ -30,7 +30,11 @@ export function buildRace(id, units, extra = {}) {
 
   const candidates = (extra.candidates || []).slice().sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-  const history = (extra.history || []).slice();
+  let history = (extra.history || []).slice();
+  // Votes falling by more than half means a source was replaced or withdrawn (e.g. a feed that had
+  // picked up the wrong election); earlier points no longer describe this count, so start over.
+  const prev = history[history.length - 1];
+  if (prev && prev[5] > 1000 && s.votes.T < prev[5] * 0.5) history = [];
   const point = [
     Math.round(Date.parse(now) / 1000),
     s.margin,
