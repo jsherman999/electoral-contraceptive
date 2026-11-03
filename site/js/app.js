@@ -2,6 +2,7 @@ import { resolveSource, LiveSource, DemoSource } from './data.js';
 import { ENVIRONMENTS, minutesAfterSix, demoClockIso } from './shared/demo.js';
 import { nationalSwing, fmtMargin } from './shared/model.js';
 import { openRaceModal, openCompositeModal, refreshModal, closeModal, modalState } from './modal.js';
+import { defaultSignal, raceSignal, compositeSignal, senateTally, isHit } from './signals.js';
 
 const cfg = window.TRACKER_CONFIG || {};
 const $ = (s, el = document) => el.querySelector(s);
@@ -18,52 +19,6 @@ const state = {
   timer: null,
   playing: false,
 };
-
-// ---------------------------------------------------------------- signals
-export function defaultSignal(colId, board) {
-  const col = board.columns.find((c) => c.id === colId);
-  return { party: col ? col.party : 'D' };
-}
-
-const partyMargin = (m, party) => (m == null ? null : party === 'D' ? m : -m);
-
-/** How a single race is doing against a signal { party, margin }. */
-export function raceSignal(sum, sig) {
-  if (!sum) return { state: 'pending' };
-  const thr = sig.margin || 0;
-  if (sum.call && sum.call.party) {
-    const ok = sum.call.party === sig.party && (thr === 0 || (partyMargin(sum.margin, sig.party) ?? -1) >= thr);
-    return { state: ok ? 'hit-strong' : 'miss-strong', final: true };
-  }
-  if (sum.status === 'complete') {
-    const v = partyMargin(sum.margin, sig.party);
-    return { state: v > thr ? 'hit-strong' : 'miss-strong', final: true };
-  }
-  const p = sum.projection || {};
-  if (!sum.votes || !sum.votes.T || p.margin == null) return { state: 'pending' };
-  const v = partyMargin(p.margin, sig.party);
-  const z = (v - thr) / (p.sigma || 10);
-  if (p.confidence === 'too-early') return { state: 'pending', lean: z > 0 ? 'hit' : 'miss', z };
-  if (z >= 1.645) return { state: 'hit-strong', z };
-  if (z > 0) return { state: 'hit', z };
-  if (z <= -1.645) return { state: 'miss-strong', z };
-  return { state: 'miss', z };
-}
-
-const isHit = (s) => s === 'hit' || s === 'hit-strong';
-const isMiss = (s) => s === 'miss' || s === 'miss-strong';
-
-export function compositeSignal(comp, races) {
-  const members = comp.races.map((id) => ({ id, sig: raceSignal(races[id], { party: comp.party }), sum: races[id] }));
-  const hits = members.filter((m) => isHit(m.sig.state)).length;
-  const misses = members.filter((m) => isMiss(m.sig.state)).length;
-  const strongHits = members.filter((m) => m.sig.state === 'hit-strong').length;
-  const strongMiss = members.filter((m) => m.sig.state === 'miss-strong').length;
-  let st = 'pending';
-  if (hits >= comp.atLeast) st = strongHits >= comp.atLeast ? 'hit-strong' : 'hit';
-  else if (misses > comp.races.length - comp.atLeast) st = strongMiss > comp.races.length - comp.atLeast ? 'miss-strong' : 'miss';
-  return { state: st, hits, misses, members };
-}
 
 function cardSignal(card, colId) {
   const races = state.summary?.races || {};
@@ -121,6 +76,7 @@ function fmtClock(hhmm) {
   const hh = ((h + 11) % 12) + 1;
   return `${hh}:${String(m).padStart(2, '0')}`;
 }
+const ampm = (hhmm) => (Number(String(hhmm).split(':')[0]) >= 24 ? 'AM ET' : 'PM ET');
 function fmtTime(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', second: '2-digit' }) + ' ET';
@@ -147,7 +103,7 @@ function renderBoard() {
     const tc = document.createElement('div');
     tc.className = 'timecell';
     tc.dataset.time = row.time;
-    tc.innerHTML = `<div class="t">${fmtClock(row.time)}</div><div class="pm">PM ET</div><div class="st">${esc(row.states)}</div><div class="countdown"></div>`;
+    tc.innerHTML = `<div class="t">${fmtClock(row.time)}</div><div class="pm">${ampm(row.time)}</div><div class="st">${esc(row.states)}</div><div class="countdown"></div>`;
     board.append(tc);
     for (const col of b.columns) {
       const cell = document.createElement('div');
@@ -185,6 +141,70 @@ function renderBoard() {
     later.append(lbl, pills);
   }
   $('#footnote').textContent = b.footnote || '';
+  renderSenate();
+}
+
+// ---------------------------------------------------------------- render: senate section
+function renderSenate() {
+  const sec = state.board.senate;
+  const host = $('#senate');
+  if (!sec || !host) return;
+  host.innerHTML = `
+    <div class="boardhead senatehead">
+      <div class="chamber">${esc(sec.title || 'SENATE')}</div>
+      <div class="senate-tally"><span id="senate-tally">—</span> <span class="verdict" id="senate-verdict">Waiting for returns</span></div>
+    </div>
+    <p class="senate-note">${esc(sec.note || '')}</p>
+    <div class="board senate-board" id="senate-board"></div>`;
+  const grid = $('#senate-board');
+  const head = document.createElement('div');
+  head.className = 'timehead';
+  head.innerHTML = 'POLLS CLOSE<small>Eastern time</small>';
+  grid.append(head);
+  for (const col of sec.columns) {
+    const h = document.createElement('div');
+    h.className = `colhead senate-${col.id}`;
+    h.innerHTML = `<h2>${esc(col.title)}</h2><div class="sub">${esc(col.sub || '')}</div><div class="tally" id="stally-${col.id}">—</div>`;
+    grid.append(h);
+  }
+  for (const row of sec.rows) {
+    const tc = document.createElement('div');
+    tc.className = 'timecell';
+    tc.dataset.time = row.time;
+    tc.innerHTML = `<div class="t">${fmtClock(row.time)}</div><div class="pm">${ampm(row.time)}</div><div class="st">${esc(row.states)}</div><div class="countdown"></div>`;
+    grid.append(tc);
+    for (const col of sec.columns) {
+      const cell = document.createElement('div');
+      cell.className = `cell senate-${col.id}`;
+      cell.dataset.col = col.title;
+      for (const card of (row.cells || {})[col.id] || []) cell.append(makeCard({ ...card, signal: card.signal || { party: col.party || 'D' } }, `senate:${col.id}`, row.time));
+      grid.append(cell);
+    }
+  }
+}
+
+function updateSenate() {
+  const sec = state.board.senate;
+  if (!sec || !$('#senate-tally')) return;
+  const t = senateTally(sec, state.summary?.races || {});
+  const need = sec.needed || 4;
+  $('#senate-tally').textContent = t.reporting
+    ? `Projected Democratic net gain: ${t.net >= 0 ? '+' : ''}${t.net} of +${need} needed`
+    : `Democrats need a net +${need}`;
+  const v = $('#senate-verdict');
+  v.className = 'verdict';
+  if (!t.reporting) v.textContent = 'Waiting for returns';
+  else if (t.net >= need) {
+    v.classList.add('wave');
+    v.textContent = 'Tracking: DEM MAJORITY';
+  } else if (t.net + t.pending < need) {
+    v.classList.add('riptide');
+    v.textContent = 'Tracking: GOP HOLDS SENATE';
+  } else v.textContent = 'Senate in play';
+  const sh = $('#stally-hold');
+  if (sh) sh.textContent = t.losses ? `${t.losses} at risk` : t.holds ? 'holding' : '—';
+  const sf = $('#stally-flip');
+  if (sf) sf.textContent = t.reporting ? `${t.pickups} of ${t.targets} flipping` : `${t.targets} targets`;
 }
 
 let cardSeq = 0;
@@ -207,7 +227,7 @@ function makeCard(card, colId, time, isLater = false) {
     else el.classList.add(meta.holder === 'D' ? 'D' : 'R');
     const star = meta.redrawn ? '<span class="star" title="Redrawn since 2024">★</span>' : '';
     const who = card.label || meta.name || '';
-    el.innerHTML = `<div class="code">${esc(card.race)}${star} <span class="check">✓</span></div><div class="who">${esc(who)}</div><div class="live"></div><div class="bar"><i></i></div><span class="badge" hidden></span>`;
+    el.innerHTML = `<div class="code">${esc(meta.code || card.race)}${star} <span class="check">✓</span></div><div class="who">${esc(who)}</div><div class="live"></div><div class="bar"><i></i></div><span class="badge" hidden></span>`;
     const sig = card.signal || (isLater ? { party: 'D' } : defaultSignal(colId, state.board));
     el._sig = sig;
     el.addEventListener('click', () => openRaceModal(card.race, ctx(), { signal: sig, label: card.label, colId }));
@@ -311,6 +331,7 @@ function updateCards() {
     if (el) el.textContent = x.reporting ? `${x.hit} of ${x.total} hitting · ${x.reporting} reporting` : `${x.total} signals`;
   }
   renderStatus(t);
+  updateSenate();
 }
 
 const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);

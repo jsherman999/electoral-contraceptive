@@ -99,6 +99,7 @@ async function load(ctx, quiet) {
 function signalFor(ctx) {
   const meta = ctx.board.races[modalState.id] || {};
   if (modalState.opts.signal) return modalState.opts.signal;
+  if (meta.chamber === 'senate') return { party: 'D' };
   // Opened from a link: use the race's (non-threshold) card on the board.
   for (const row of ctx.board.rows) {
     for (const [colId, cards] of Object.entries(row.cells || {})) {
@@ -124,7 +125,7 @@ function renderShell(ctx) {
   $('#modal').innerHTML = `
     <div class="mhead ${meta.holder === 'D' ? 'D' : 'R'}">
       <div>
-        <h3 id="mtitle">${esc(id)} ${meta.redrawn ? '<span title="Redrawn since 2024" style="color:#ffd23f">★</span>' : ''}</h3>
+        <h3 id="mtitle">${esc(meta.chamber === 'senate' ? `${meta.code || id} Senate` : id)} ${meta.redrawn ? '<span title="Redrawn since 2024" style="color:#ffd23f">★</span>' : ''}</h3>
         <div class="meta">${esc(meta.name || '')} · ${meta.holder === 'D' ? 'Democratic' : 'Republican'}-held · polls close ${esc(fmtClock(meta.close))} ET</div>
       </div>
       <button class="close" aria-label="Close" type="button">×</button>
@@ -136,7 +137,7 @@ function renderShell(ctx) {
 function fmtClock(hhmm) {
   if (!hhmm) return '';
   const [h, m] = hhmm.split(':').map(Number);
-  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} pm`;
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h >= 24 ? 'am' : 'pm'}`;
 }
 
 function render(ctx) {
@@ -149,7 +150,12 @@ function render(ctx) {
   const sig = signalFor(ctx);
   const ss = ctx.raceSignal(sum, sig);
   const [scls, stxt] = STATE_TEXT[ss.state] || STATE_TEXT.pending;
-  const colTitle = modalState.opts.colId ? ctx.board.columns.find((c) => c.id === modalState.opts.colId)?.title : null;
+  const colId = modalState.opts.colId || '';
+  const colTitle = colId.startsWith('senate:')
+    ? `SENATE ${ctx.board.senate?.columns.find((c) => `senate:${c.id}` === colId)?.title || ''}`.trim()
+    : colId
+      ? ctx.board.columns.find((c) => c.id === colId)?.title
+      : null;
   const sigHtml = `<div class="signalbox ${scls}"><b>${colTitle ? esc(colTitle) + ' signal' : 'Signal'}:</b> ${esc(signalSentence(sig, meta))}. <b>${esc(stxt)}</b>${ss.final ? ' (final)' : ''}.</div>`;
 
   if (modalState.error || !d) {

@@ -22,6 +22,8 @@ const LEAN_OVERRIDES = {
   'KY-06': -14, 'IN-05': -16, 'FL-14': -2, 'FL-22': -2, 'FL-25': -2, 'NC-01': -2, 'OH-09': -3,
   'FL-09': -6, 'ME-02': -7, 'TX-09': -7, 'TX-28': -8, 'TX-32': -6, 'TX-34': -7, 'TX-35': -6,
   'PA-07': -1, 'PA-10': -2, 'MT-01': -7, 'CA-22': -1, 'CA-48': -2,
+  // statewide Senate races, roughly the 2024 presidential margins
+  'FL-SEN': -13, 'NC-SEN': -3, 'OH-SEN': -11, 'MI-SEN': -1.5, 'TX-SEN': -13.5, 'ME-SEN': 7, 'KS-SEN': -16, 'IA-SEN': -13, 'AK-SEN': -13,
 };
 
 function hash(s) {

@@ -78,7 +78,9 @@
     "wi": { "adapter": "delimited", "url": "", "hint": "Wisconsin: county clerks (often CSV or PDF)." },
     "ne": { "adapter": "clarity", "url": "", "hint": "Nebraska: Douglas / Sarpy county results." },
     "mt": { "adapter": "json", "url": "", "hint": "Montana SOS results (county level)." },
-    "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." }
+    "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." },
+    "ks": { "adapter": "json", "url": "", "hint": "Kansas SOS election night results (Senate race only on this board)." },
+    "ak": { "adapter": "json", "url": "", "hint": "Alaska Division of Elections results (Senate race only on this board; polls close 12 am ET)." }
   },
   "stateFeeds": {
     "NC": ["nc"],
@@ -101,7 +103,9 @@
     "WI": ["wi"],
     "NE": ["ne"],
     "MT": ["mt"],
-    "CA": ["ca"]
+    "CA": ["ca"],
+    "KS": ["ks"],
+    "AK": ["ak"]
   },
   "races": {}
 }

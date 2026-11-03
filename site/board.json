@@ -72,6 +72,26 @@
   ],
   "laterCaption": "toss-ups settle the final size",
   "footnote": "Other California Proposition 50 target districts may take days or weeks to count, explaining “(or Week)” in the headline.",
+  "senate": {
+    "title": "SENATE",
+    "note": "Republicans hold 53 seats. Democrats need a net gain of 4 for a 51-seat majority (the vice president breaks 50-50 ties for Republicans). Races: the seven in the NYT/Siena poll of Oct. 23-Nov. 1, plus North Carolina and Florida.",
+    "needed": 4,
+    "columns": [
+      { "id": "hold", "title": "DEMS MUST HOLD", "sub": "Open Democratic seat", "party": "D" },
+      { "id": "flip", "title": "DEM PICKUP TARGETS", "sub": "Need a net 4 for 51 seats", "party": "D" }
+    ],
+    "rows": [
+      { "time": "19:00", "states": "FL", "cells": { "flip": [{ "race": "FL-SEN" }] } },
+      { "time": "19:30", "states": "NC · OH", "cells": { "flip": [{ "race": "NC-SEN" }, { "race": "OH-SEN" }] } },
+      {
+        "time": "20:00",
+        "states": "MI · TX · ME · KS",
+        "cells": { "hold": [{ "race": "MI-SEN" }], "flip": [{ "race": "TX-SEN" }, { "race": "ME-SEN" }, { "race": "KS-SEN" }] }
+      },
+      { "time": "21:00", "states": "IA", "cells": { "flip": [{ "race": "IA-SEN" }] } },
+      { "time": "24:00", "states": "AK", "cells": { "flip": [{ "race": "AK-SEN" }] } }
+    ]
+  },
   "composites": {
     "FL-REDRAW": {
       "title": "FL redraw",
@@ -152,6 +172,15 @@
     "TX-34": { "holder": "D", "name": "Gonzalez", "redrawn": true, "close": "20:00", "hidden": true },
     "TX-35": { "holder": "D", "name": "TX-35", "redrawn": true, "close": "20:00", "hidden": true },
     "PA-07": { "holder": "R", "name": "Mackenzie", "close": "20:00", "hidden": true },
-    "PA-10": { "holder": "R", "name": "Perry", "close": "20:00", "hidden": true }
+    "PA-10": { "holder": "R", "name": "Perry", "close": "20:00", "hidden": true },
+    "FL-SEN": { "holder": "R", "name": "Moody (special)", "code": "Florida", "chamber": "senate", "close": "19:00" },
+    "NC-SEN": { "holder": "R", "name": "Cooper v. Whatley", "code": "N. Carolina", "chamber": "senate", "close": "19:30" },
+    "OH-SEN": { "holder": "R", "name": "Brown v. Husted", "code": "Ohio", "chamber": "senate", "close": "19:30" },
+    "MI-SEN": { "holder": "D", "name": "El-Sayed v. Rogers", "code": "Michigan", "chamber": "senate", "close": "20:00" },
+    "TX-SEN": { "holder": "R", "name": "Talarico v. Paxton", "code": "Texas", "chamber": "senate", "close": "20:00" },
+    "ME-SEN": { "holder": "R", "name": "Jackson v. Collins", "code": "Maine", "chamber": "senate", "close": "20:00" },
+    "KS-SEN": { "holder": "R", "name": "Hamilton v. Marshall", "code": "Kansas", "chamber": "senate", "close": "20:00" },
+    "IA-SEN": { "holder": "R", "name": "Turek v. Hinson", "code": "Iowa", "chamber": "senate", "close": "21:00" },
+    "AK-SEN": { "holder": "R", "name": "Peltola v. Sullivan", "code": "Alaska", "chamber": "senate", "close": "24:00" }
   }
 }

@@ -28,12 +28,25 @@ export function houseContestRegex(n) {
 
 export const presidentRegex = /PRESIDENT/i;
 
+/**
+ * RegExp for the U.S. Senate contest, including special elections ("U.S. Senator (Unexpired Term)").
+ * Excludes state senate races. If a state has two Senate races on one ballot, set the race's contest
+ * explicitly in config/sources.json.
+ */
+export function senateContestRegex() {
+  return new RegExp(
+    String.raw`^(?!.*\b(STATE\s+SENAT\w*|SENATE\s+DISTRICT|SENATORIAL\s+DISTRICT|ASSEMBLY|LEGISLAT\w*|PRESIDENT PRO)\b)(?!.*\b(?:(?!US\b)[A-Z]{2}|${STATE_NAMES})\s+SENATE\b)(?=.*(U\.?\s?S\.?\s*SENAT|UNITED STATES\s+SENAT|\bUS\s*SENAT|RACE=USS\b|\bUSS\b))`,
+    'i'
+  );
+}
+
 /** Turn a config value into a RegExp: "auto" -> house regex for the race, otherwise a pattern string. */
 export function contestMatcher(spec, raceId) {
   if (spec instanceof RegExp) return spec;
   if (!spec || spec === 'auto') {
-    const n = Number(String(raceId).split('-')[1]);
-    return houseContestRegex(n);
+    const part = String(raceId).split('-')[1];
+    if (/^SEN/i.test(part)) return senateContestRegex();
+    return houseContestRegex(Number(part));
   }
   return new RegExp(spec, 'i');
 }

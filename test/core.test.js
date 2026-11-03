@@ -147,3 +147,25 @@ test('enhanced voting: walker finds precinct results under local results', () =>
   assert.equal(rows[0].county, 'Chatham');
   assert.equal(rows[0].precinct, '1-01');
 });
+
+test('Senate contest matching', async () => {
+  const { senateContestRegex, contestMatcher } = await import('../collector/lib/contest.js');
+  const re = senateContestRegex();
+  for (const s of ['US SENATE', 'U.S. Senate', 'United States Senator', 'U.S. Senator (Unexpired Term Ending January 3, 2029)', 'United States Senator | RACE=USS | DIST='])
+    assert.ok(re.test(s), s);
+  for (const s of ['State Senate District 5', 'NC STATE SENATE DISTRICT 01', 'Ohio Senate District 3', 'Michigan Senate 12th District', 'US HOUSE OF REPRESENTATIVES DISTRICT 01'])
+    assert.ok(!re.test(s), s);
+  assert.ok(contestMatcher('auto', 'NC-SEN').test('US SENATE'));
+  assert.ok(!contestMatcher('auto', 'NC-01').test('US SENATE'));
+});
+
+test('Senate tally: net gain counts pickups minus lost holds', async () => {
+  const board = JSON.parse(fs.readFileSync(new URL('../site/board.json', import.meta.url)));
+  const sum = (m, sigma = 2) => ({ votes: { T: 1000 }, margin: m, status: 'counting', projection: { margin: m, sigma, confidence: 'likely' } });
+  const races = { 'NC-SEN': sum(5), 'OH-SEN': sum(4), 'ME-SEN': sum(6), 'TX-SEN': sum(-8), 'MI-SEN': sum(-3) };
+  const { senateTally } = await import('../site/js/signals.js');
+  const t = senateTally(board.senate, races);
+  assert.equal(t.pickups, 3);
+  assert.equal(t.losses, 1);
+  assert.equal(t.net, 2);
+});
