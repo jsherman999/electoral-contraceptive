@@ -83,7 +83,10 @@ export async function discover(cfg, log = () => {}) {
     }
   }
   const dateRe = datePatterns(cfg.date);
-  const ranked = [...cands.values()].sort((a, b) => b.eid - a.eid).slice(0, 8);
+  // Same-day specials and primaries share the election date, so also require a federal contest.
+  const contestRe = new RegExp(cfg.requireContest || String.raw`U\.?\s?S\.?\s*(House|Rep|Senat)|United States (Senat|Rep|Congress)|Congress`, 'i');
+  const ranked = [...cands.values()].sort((a, b) => b.eid - a.eid).slice(0, cfg.maxCandidates || 12);
+  let withContest = null;
   let fallback = null;
   const tried = [];
   let blockedErr = null;
@@ -94,28 +97,32 @@ export async function discover(cfg, log = () => {}) {
       const url = `${c.origin}/${st}/${c.eid}/`;
       fallback ||= url;
       let text = '';
-      for (const f of ['json/electionsettings.json', 'json/en/electionsettings.json', 'json/en/summary.json']) {
+      for (const f of ['json/en/electionsettings.json', 'json/electionsettings.json', 'json/en/summary.json', 'json/summary.json']) {
         try {
-          text += (await get(`${c.origin}/${st}/${c.eid}/${ver}/${f}`, { conditional: false, retries: 0, timeoutMs: 20000 })).text().slice(0, 200000);
-          if (dateRe.test(text)) break;
+          text += (await get(`${c.origin}/${st}/${c.eid}/${ver}/${f}`, { conditional: false, retries: 0, timeoutMs: 20000 })).text().slice(0, 400000);
         } catch {
           /* try the next file */
         }
       }
-      if (dateRe.test(text)) {
-        const hit = { url, verified: true, note: `discovered ${url} (election date ${cfg.date} confirmed)` };
+      const hasDate = dateRe.test(text);
+      const hasContest = contestRe.test(text);
+      tried[tried.length - 1] += hasContest ? (hasDate ? ' (date + federal contests)' : ' (federal contests)') : hasDate ? ' (date, no federal contests)' : '';
+      if (hasDate && hasContest) {
+        const hit = { url, verified: true, note: `discovered ${url} (election date ${cfg.date} and federal contests confirmed)` };
         discovered.set(key, hit);
         log(`clarity ${st}: ${hit.note}`);
         return hit;
       }
+      if (hasContest && !withContest) withContest = url;
     } catch (e) {
       if (e.blocked) blockedErr = e;
       tried[tried.length - 1] += ` (${e.message.replace(/ for https?:\S+/, '').slice(0, 50)})`;
     }
   }
-  if (fallback) {
-    // Not cached, so the next pass tries again to confirm the date.
-    const hit = { url: fallback, verified: false, note: `using newest election found, ${fallback}, date not confirmed (${seen.join('; ')})` };
+  if (withContest || fallback) {
+    // Not cached, so the next pass tries again to confirm.
+    const url = withContest || fallback;
+    const hit = { url, verified: false, note: `using ${url}: ${withContest ? 'has federal contests, date not confirmed' : 'newest election found, not confirmed'} (checked ${tried.slice(0, 6).join(', ')})` };
     log(`clarity ${st}: ${hit.note}`);
     return hit;
   }

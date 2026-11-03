@@ -18,12 +18,17 @@ function server() {
       const routes = {
         '/landing': `<html><a href="${base}/SC/120000/web.1/#/summary">2024 General</a>
           <a href="${base}/SC/125555/web.345435/#/summary">Election night results</a>
-          <a href="${base}/SC/125600/web.345435/#/summary">Special</a></html>`,
+          <a href="${base}/SC/125600/web.345435/#/summary">Special</a>
+          <a href="${base}/SC/125700/">State Senate special, same day</a></html>`,
+        '/SC/125700/current_ver.txt': '2',
+        '/SC/125700/2/json/en/electionsettings.json': JSON.stringify({ settings: { electiondetails: { electiondate: '11/3/2026' } } }),
+        '/SC/125700/2/json/en/summary.json': JSON.stringify([{ C: 'State  Senate, District 15 - DEM' }]),
         '/SC/120000/current_ver.txt': '3',
         '/SC/120000/3/json/electionsettings.json': JSON.stringify({ settings: { electiondetails: { electiondate: '11/5/2024' } } }),
         '/SC/125600/current_ver.txt': '1',
         '/SC/125600/1/json/electionsettings.json': JSON.stringify({ settings: { electiondetails: { electiondate: '12/15/2026' } } }),
         '/SC/125555/current_ver.txt': '7',
+        '/SC/125555/7/json/en/summary.json': JSON.stringify([{ C: 'U.S. House of Representatives District 1' }]),
         '/SC/125555/7/json/electionsettings.json': JSON.stringify({
           settings: { electiondetails: { electiondate: '11/3/2026', participatingcounties: ['Charleston|125556|9|11/3/2026 9:00:00 PM|8'] } },
         }),
@@ -46,7 +51,7 @@ test('clarity: state-branded hosts parse', () => {
   });
 });
 
-test('clarity discovery picks the election on the configured date and reads county precincts', async () => {
+test('clarity discovery skips same-day specials, picks the general by date + federal contests, reads county precincts', async () => {
   const srv = await server();
   try {
     const base = `http://127.0.0.1:${srv.address().port}`;

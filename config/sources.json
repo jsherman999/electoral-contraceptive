@@ -26,17 +26,13 @@
     },
     "sc": {
       "adapter": "clarity",
-      "url": "https://www.enr-scvotes.org/SC/127227/",
+      "url": "",
       "discover": {
         "state": "SC",
         "date": "2026-11-03",
-        "pages": [
-          "https://www.enr-scvotes.org/SC/",
-          "https://scvotes.gov/",
-          "https://scvotes.gov/election-results/"
-        ]
+        "pages": ["https://scvotes.gov/election-results/", "https://scvotes.gov/"]
       },
-      "note": "SC Election Commission on Clarity. 127227 is the newest election linked from scvotes.gov/election-results on Nov 3 (date not confirmed). The Clarity host answers automated requests with a bot challenge, so this feed may stay blocked."
+      "note": "SC Election Commission on Clarity (www.enr-scvotes.org). The election is found from scvotes.gov/election-results by date and federal contests (127227, the newest link, is a State Senate special). The Clarity host often challenges GitHub; relay from home with --feeds sc."
     },
     "co": {
       "adapter": "clarity",
