@@ -31,8 +31,10 @@ import * as enhanced from './adapters/enhanced-voting.js';
 import * as fldos from './adapters/fl-dos.js';
 import * as delimited from './adapters/delimited.js';
 import * as jsonAdapter from './adapters/json.js';
+import * as cdf from './adapters/cdf.js';
+import * as txCivix from './adapters/tx-civix.js';
 
-const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter };
+const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');
@@ -172,7 +174,7 @@ async function runOnce(outDir) {
     const built = buildUnits(rows, { candidates: cfg.candidates || plan.find((p) => p.candidates)?.candidates });
     const { candidates, contests } = built;
     const idx = loadBaseline(baselineDir, id.slice(0, 2));
-    const { units } = attachBaseline(built.units, idx);
+    const { units } = attachBaseline(built.units, idx, { statewide: /-SEN$/.test(id) });
     const feeds = plan.map((p) => ({ ...(feedStatus[p.feed] || { id: p.feed, ok: false }), contests: contests.length ? contests : undefined }));
     if (!units.length && plan.length && feeds.some((f) => f.ok)) feeds.forEach((f) => f.ok && (f.note = `no contest matched ${p_re(plan)}`));
     const { summary, detail } = buildRace(id, units, { now, candidates, call: calls[id] || null, feeds, history: histories.get(id) || [] });

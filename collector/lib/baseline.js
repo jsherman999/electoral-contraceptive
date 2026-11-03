@@ -111,7 +111,7 @@ function batchModes(u) {
  * Attach baselines to units. Returns { matched, units } where batch units are merged per county.
  * unit: { c, p, lvl, v } -> adds b (2024 President cells), bh (2024 House cells), mk (match kind)
  */
-export function attachBaseline(units, idx) {
+export function attachBaseline(units, idx, opts = {}) {
   if (!idx) return { matched: 0, units };
   const used = new Set();
   const out = [];
@@ -135,8 +135,13 @@ export function attachBaseline(units, idx) {
     }
     out.push(u);
     if (u.lvl === 'county' || u.p == null) {
-      Object.assign(u, { b: c.pres, bh: c.house, mk: 'county' });
-      matched += 1;
+      // A county-level result can only be compared with the whole county's 2024 vote if the race covers
+      // (nearly) the whole county: always true statewide; for a district, judged from precinct counts.
+      const whole = opts.statewide || (u.pr && u.pr.tot > 0 && c.real > 0 && u.pr.tot >= 0.85 * c.real);
+      if (whole) {
+        Object.assign(u, { b: c.pres, bh: c.house, mk: 'county' });
+        matched += 1;
+      } else u.mk = null;
       continue;
     }
     const keys = precinctKeys(u.p);

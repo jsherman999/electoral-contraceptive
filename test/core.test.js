@@ -169,3 +169,31 @@ test('Senate tally: net gain counts pickups minus lost holds', async () => {
   assert.equal(t.losses, 1);
   assert.equal(t.net, 2);
 });
+
+test('CDF (IEEE 1622.2 V1, Ohio): attribute-style units, parties and singular CandidateId', async () => {
+  const { parseCdf } = await import('../collector/adapters/cdf.js');
+  const xml = `<?xml version="1.0"?><ElectionReport IsTest="true" GeneratedDate="2026-11-03T03:15:34Z"><GpUnitCollection>
+    <GpUnit xsi:type="ReportingUnit" ObjectId="g1" Name="Adams" IsElectoralDistrict="false"/>
+    <GpUnit xsi:type="ReportingUnit" ObjectId="g0" Name="Ohio" IsElectoralDistrict="true"/></GpUnitCollection>
+    <PartyCollection><Party ObjectId="p1" Abbreviation="DEM"><Name><LanguageString Language="en">Democratic</LanguageString></Name></Party>
+    <Party ObjectId="p2" Abbreviation="REP"/></PartyCollection><Election Date="2026-11-03"><CandidateCollection>
+    <Candidate ObjectId="c1"><BallotName><LanguageString Language="en">Sherrod Brown</LanguageString></BallotName><PartyId>p1</PartyId></Candidate>
+    <Candidate ObjectId="c2"><BallotName><LanguageString Language="en">Jon Husted</LanguageString></BallotName><PartyId>p2</PartyId></Candidate></CandidateCollection>
+    <ContestCollection><Contest xsi:type="CandidateContest" ObjectId="k1" Name="U.S. Senator">
+    <BallotSelection xsi:type="CandidateSelection" ObjectId="s1"><VoteCountsCollection><VoteCounts GpUnitId="g1" Type="Total" Count="120"/><VoteCounts GpUnitId="g0" Type="Total" Count="9999"/></VoteCountsCollection><CandidateId>c1</CandidateId></BallotSelection>
+    <BallotSelection xsi:type="CandidateSelection" ObjectId="s2"><VoteCountsCollection><VoteCounts GpUnitId="g1" Type="Total" Count="300"/></VoteCountsCollection><CandidateId>c2</CandidateId></BallotSelection>
+    </Contest></ContestCollection></Election></ElectionReport>`;
+  const { rows, isTest } = parseCdf(xml);
+  assert.equal(isTest, true);
+  assert.deepEqual(rows.map((r) => [r.county, r.candidate, r.party, r.votes]), [['Adams', 'Sherrod Brown', 'DEM', 120], ['Adams', 'Jon Husted', 'REP', 300]]);
+});
+
+test('county-level results in a split county are not compared with the whole county', async () => {
+  const { attachBaseline } = await import('../collector/lib/baseline.js');
+  const idx = { counties: new Map([['ADAMS', { key: 'ADAMS', name: 'ADAMS', real: 40, pres: { TOTAL: [100, 200, 0] }, house: null, exact: new Map(), alt: new Map() }]]) };
+  const split = [{ c: 'Adams', p: null, lvl: 'county', pr: { tot: 12, rep: 0 }, live: {} }];
+  const whole = [{ c: 'Adams', p: null, lvl: 'county', pr: { tot: 40, rep: 0 }, live: {} }];
+  assert.equal(attachBaseline(split, idx).units[0].mk, null);
+  assert.equal(attachBaseline(whole, idx).units[0].mk, 'county');
+  assert.equal(attachBaseline([{ c: 'Adams', p: null, lvl: 'county', live: {} }], idx, { statewide: true }).units[0].mk, 'county');
+});
