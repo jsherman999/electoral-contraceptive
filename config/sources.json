@@ -51,7 +51,7 @@
     },
     "ia": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://electionresults.iowa.gov/IA/127077/web.345435/#/summary",
       "discover": {
         "state": "IA",
         "date": "2026-11-03",
@@ -63,7 +63,7 @@
           "https://www.crawfordcounty.iowa.gov/elections/info/2026_general_election_2026_11_03/"
         ]
       },
-      "note": "Iowa SOS election night reporting (Clarity, electionresults.iowa.gov). sos.iowa.gov and the Clarity host refuse GitHub, so relay from home: collector/relay.js --feeds ...,ia"
+      "note": "Iowa SOS election night reporting (Clarity), 2026 General = IA/127077 (from the results site, Nov 3). The host often challenges GitHub; relay from home with --feeds ...,ia"
     },
     "ky": { "adapter": "clarity", "url": "", "hint": "Kentucky: state results are county level; use county clerk pages (Clarity county URLs work, add one feed per county)." },
     "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov) or county pages. Configure json/delimited mapping." },
