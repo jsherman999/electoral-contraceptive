@@ -1,0 +1,5 @@
+node_modules/
+site/results/
+.publish/
+*.tmp
+.DS_Store

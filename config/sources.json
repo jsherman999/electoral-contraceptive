@@ -1,0 +1,67 @@
+{
+  "_readme": "Live result feeds. Every race uses the feeds listed for its state under stateFeeds and finds its contest automatically (contest: 'auto' matches any common spelling of 'U.S. House District N'). To add a source on election night, paste the results URL into the feed's url and save; the collector rereads this file on every pass. Override a single race under races, e.g. \"NY-17\": [{\"feed\": \"rockland\", \"contest\": \"auto\"}, {\"feed\": \"westchester\", \"contest\": \"auto\"}]. Adapters: ncsbe, clarity, enhanced-voting, fl-dos, delimited, json (see collector/adapters/*.js for their options).",
+  "electionDate": "2026-11-03",
+  "feeds": {
+    "nc": {
+      "adapter": "ncsbe",
+      "url": "https://s3.amazonaws.com/dl.ncsbe.gov/ENRS/2026_11_03/results_pct_20261103.zip",
+      "note": "NC State Board of Elections statewide precinct file (verified: live, zero counts before polls close)"
+    },
+    "fl-dos": {
+      "adapter": "fl-dos",
+      "url": "https://flelectionfiles.floridados.gov/enightfilespublic/20261103_ElecResultsFL.txt",
+      "note": "Florida DOS election-night file, county level. Add county Supervisor of Elections feeds for precinct detail."
+    },
+    "ga": {
+      "adapter": "enhanced-voting",
+      "url": "https://results.sos.ga.gov/results/public/Georgia/elections/2026NovGen",
+      "note": "Georgia SOS (Enhanced Voting). URL follows the 2024 pattern (2024NovGen); confirm on the night."
+    },
+    "va": {
+      "adapter": "enhanced-voting",
+      "url": "",
+      "hint": "Virginia ELECT results site. Paste the election's public results URL; if it is not an Enhanced Voting site, switch the adapter to json or delimited."
+    },
+    "sc": { "adapter": "clarity", "url": "", "hint": "SC Election Commission results (Clarity). Paste the statewide results URL, e.g. https://results.enr.clarityelections.com/SC/<id>/web.<n>/#/summary" },
+    "co": { "adapter": "clarity", "url": "", "hint": "Colorado SOS results (Clarity). Paste the statewide results URL." },
+    "ia": { "adapter": "clarity", "url": "", "hint": "Iowa SOS results (Clarity). Paste the statewide results URL." },
+    "ky": { "adapter": "clarity", "url": "", "hint": "Kentucky: state results are county level; use county clerk pages (Clarity county URLs work, add one feed per county)." },
+    "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov) or county pages. Configure json/delimited mapping." },
+    "oh": { "adapter": "clarity", "url": "", "hint": "Ohio: county boards of elections (Hamilton, Montgomery, Lucas, Summit...). One feed per county." },
+    "pa": { "adapter": "clarity", "url": "", "hint": "Pennsylvania: county results pages (Bucks, Lehigh, Northampton, Monroe, Lackawanna, Luzerne...). One feed per county." },
+    "mi": { "adapter": "clarity", "url": "", "hint": "Michigan: county clerks (Kent, Ottawa, Kalamazoo, Macomb...). One feed per county." },
+    "nj": { "adapter": "clarity", "url": "", "hint": "New Jersey: county clerks. One feed per county." },
+    "tx": { "adapter": "delimited", "url": "", "hint": "Texas: county elections offices (Hidalgo, Cameron, Harris, Dallas, Travis...). Texas SOS is county level." },
+    "me": { "adapter": "delimited", "url": "", "hint": "Maine reports by town after counting; use a town-level CSV if one is published." },
+    "ny": { "adapter": "delimited", "url": "", "hint": "New York: county boards (Rockland, Westchester, Putnam, Dutchess)." },
+    "az": { "adapter": "delimited", "url": "", "hint": "Arizona: Maricopa / Pima / Pinal / Coconino county results files." },
+    "wi": { "adapter": "delimited", "url": "", "hint": "Wisconsin: county clerks (often CSV or PDF)." },
+    "ne": { "adapter": "clarity", "url": "", "hint": "Nebraska: Douglas / Sarpy county results." },
+    "mt": { "adapter": "json", "url": "", "hint": "Montana SOS results (county level)." },
+    "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." }
+  },
+  "stateFeeds": {
+    "NC": ["nc"],
+    "FL": ["fl-dos"],
+    "GA": ["ga"],
+    "VA": ["va"],
+    "SC": ["sc"],
+    "CO": ["co"],
+    "IA": ["ia"],
+    "KY": ["ky"],
+    "IN": ["in"],
+    "OH": ["oh"],
+    "PA": ["pa"],
+    "MI": ["mi"],
+    "NJ": ["nj"],
+    "TX": ["tx"],
+    "ME": ["me"],
+    "NY": ["ny"],
+    "AZ": ["az"],
+    "WI": ["wi"],
+    "NE": ["ne"],
+    "MT": ["mt"],
+    "CA": ["ca"]
+  },
+  "races": {}
+}

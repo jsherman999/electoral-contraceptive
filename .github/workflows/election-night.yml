@@ -1,0 +1,54 @@
+name: Election night collector
+
+# Collects results in a loop and force-pushes them to the `election-data` branch, which the Pages board
+# reads. A GitHub-hosted job can run for at most 6 hours, so the night is covered by two scheduled runs
+# (times are UTC; Nov 3 2026 is EST = UTC-5). Start it by hand from the Actions tab at any time.
+# Edits to config/sources.json or config/calls.json pushed to main are picked up on the next pass.
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: How long to keep collecting (minutes, max ~345)
+        default: '345'
+      interval:
+        description: Seconds between passes
+        default: '90'
+      demo:
+        description: Publish simulated results once instead (to test the Pages board)
+        type: boolean
+        default: false
+  schedule:
+    - cron: '40 22 3 11 *' # 5:40 pm ET, Nov 3 -> runs until ~11:25 pm ET
+    - cron: '30 4 4 11 *' # 11:30 pm ET, Nov 3 -> runs until ~5:15 am ET
+
+permissions:
+  contents: write
+
+concurrency:
+  group: election-night
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Configure git identity
+        run: |
+          git config --global user.name "election-night-bot"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Publish simulated results (test)
+        if: ${{ inputs.demo }}
+        run: node collector/collect.js --demo --demo-clock 21:30 --publish
+      - name: Collect and publish
+        if: ${{ !inputs.demo }}
+        run: >
+          node collector/collect.js --watch --publish
+          --minutes "${{ inputs.minutes || '345' }}"
+          --interval "${{ inputs.interval || '90' }}"
+          --refresh-config "${{ github.ref_name }}"

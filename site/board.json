@@ -1,0 +1,157 @@
+{
+  "title": "A Blue Wave Should Be Clear by 9pm. If Things Look Tight at 11pm, Expect a Long Night (or Week).",
+  "chamber": "HOUSE",
+  "electionDate": "2026-11-03",
+  "timezone": "America/New_York",
+  "columns": [
+    { "id": "riptide", "title": "RED RIPTIDE", "sub": "GOP holds or gains", "party": "R" },
+    { "id": "tide", "title": "BLUE TIDE", "sub": "Dems win 218–229", "party": "D" },
+    { "id": "wave", "title": "BLUE WAVE", "sub": "Dems win 230–239", "party": "D" },
+    { "id": "tsunami", "title": "BLUE TSUNAMI", "sub": "Dems win 240+", "party": "D" }
+  ],
+  "rows": [
+    {
+      "time": "18:00",
+      "states": "KY (east) · IN",
+      "cells": {
+        "riptide": [
+          { "race": "KY-06", "label": "GOP by 10+", "signal": { "party": "R", "margin": 10 }, "dashed": true },
+          { "race": "IN-05", "label": "GOP by 15+", "signal": { "party": "R", "margin": 15 }, "dashed": true }
+        ],
+        "wave": [{ "race": "KY-06" }, { "race": "IN-05" }]
+      }
+    },
+    {
+      "time": "19:00",
+      "states": "FL · GA · SC · VA · IN · KY",
+      "cells": {
+        "riptide": [{ "race": "VA-07" }, { "race": "IN-01" }, { "race": "GA-02" }, { "composite": "FL-REDRAW", "dashed": true }],
+        "tide": [{ "race": "FL-14" }, { "race": "FL-22" }, { "race": "FL-25" }, { "race": "VA-02" }, { "race": "SC-01" }],
+        "wave": [{ "race": "FL-09" }, { "race": "FL-07" }, { "race": "VA-01" }],
+        "tsunami": [{ "race": "VA-05" }, { "race": "FL-27" }, { "race": "GA-01" }, { "race": "SC-02" }]
+      }
+    },
+    {
+      "time": "19:30",
+      "states": "NC · OH",
+      "cells": {
+        "riptide": [{ "race": "OH-01" }, { "race": "OH-13" }],
+        "tide": [{ "race": "NC-01" }, { "race": "NC-11" }, { "race": "OH-07" }, { "race": "OH-09" }],
+        "wave": [{ "race": "OH-10" }],
+        "tsunami": [{ "race": "NC-09" }, { "race": "NC-05" }]
+      }
+    },
+    {
+      "time": "20:00",
+      "states": "PA · MI · NJ · TX · ME",
+      "cells": {
+        "riptide": [{ "composite": "TX-REDRAW", "dashed": true }, { "composite": "PA-07-10", "dashed": true }],
+        "tide": [
+          { "race": "PA-08" }, { "race": "MI-04" }, { "race": "MI-07" },
+          { "race": "MI-10" }, { "race": "NJ-07" }, { "race": "PA-01" }
+        ],
+        "wave": [{ "race": "ME-02" }, { "race": "TX-15" }],
+        "tsunami": [{ "race": "NJ-02" }]
+      }
+    },
+    {
+      "time": "21:00",
+      "states": "NY · AZ · CO · WI · NE · IA",
+      "cells": {
+        "tide": [
+          { "race": "NY-17" }, { "race": "AZ-01" }, { "race": "AZ-06" },
+          { "race": "CO-08" }, { "race": "WI-03" }, { "race": "NE-02" },
+          { "race": "IA-01" }, { "race": "IA-02" }, { "race": "IA-03" }, { "race": "CO-05" }
+        ]
+      }
+    }
+  ],
+  "later": [
+    { "time": "22:00", "races": ["MT-01"] },
+    { "time": "23:00", "races": ["CA-22", "CA-48"] }
+  ],
+  "laterCaption": "toss-ups settle the final size",
+  "footnote": "Other California Proposition 50 target districts may take days or weeks to count, explaining “(or Week)” in the headline.",
+  "composites": {
+    "FL-REDRAW": {
+      "title": "FL redraw",
+      "sub": "GOP 4 for 4",
+      "races": ["FL-09", "FL-14", "FL-22", "FL-25"],
+      "party": "R",
+      "atLeast": 4,
+      "note": "The four Democratic-held Florida seats marked as redrawn. Edit site/board.json if the redraw targets differ."
+    },
+    "TX-REDRAW": {
+      "title": "TX redraw",
+      "sub": "GOP 4+ of 5",
+      "races": ["TX-09", "TX-28", "TX-32", "TX-34", "TX-35"],
+      "party": "R",
+      "atLeast": 4,
+      "note": "The five seats the 2025 Texas map was drawn to flip. Edit site/board.json if needed."
+    },
+    "PA-07-10": {
+      "title": "PA-07/10",
+      "sub": "GOP 2 for 2",
+      "races": ["PA-07", "PA-10"],
+      "party": "R",
+      "atLeast": 2
+    }
+  },
+  "races": {
+    "KY-06": { "holder": "R", "name": "Open seat", "close": "18:00" },
+    "IN-05": { "holder": "R", "name": "Spartz", "close": "18:00" },
+    "VA-07": { "holder": "D", "name": "Vindman", "close": "19:00" },
+    "IN-01": { "holder": "D", "name": "Mrvan", "close": "19:00" },
+    "GA-02": { "holder": "D", "name": "Bishop", "close": "19:00" },
+    "FL-14": { "holder": "D", "name": "Castor", "redrawn": true, "close": "19:00" },
+    "FL-22": { "holder": "D", "name": "Open seat", "redrawn": true, "close": "19:00" },
+    "FL-25": { "holder": "D", "name": "Moskowitz", "redrawn": true, "close": "19:00" },
+    "VA-02": { "holder": "R", "name": "Kiggans", "close": "19:00" },
+    "SC-01": { "holder": "R", "name": "Open seat", "close": "19:00" },
+    "FL-09": { "holder": "D", "name": "Soto", "redrawn": true, "close": "19:00" },
+    "FL-07": { "holder": "R", "name": "Open seat", "close": "19:00" },
+    "VA-01": { "holder": "R", "name": "Wittman", "close": "19:00" },
+    "VA-05": { "holder": "R", "name": "McGuire", "close": "19:00" },
+    "FL-27": { "holder": "R", "name": "Salazar", "close": "19:00" },
+    "GA-01": { "holder": "R", "name": "Open seat", "close": "19:00" },
+    "SC-02": { "holder": "R", "name": "Wilson", "close": "19:00" },
+    "OH-01": { "holder": "D", "name": "Landsman", "redrawn": true, "close": "19:30" },
+    "OH-13": { "holder": "D", "name": "Sykes", "redrawn": true, "close": "19:30" },
+    "NC-01": { "holder": "D", "name": "Davis", "redrawn": true, "close": "19:30" },
+    "NC-11": { "holder": "R", "name": "Open seat", "close": "19:30" },
+    "OH-07": { "holder": "R", "name": "Miller", "close": "19:30" },
+    "OH-09": { "holder": "D", "name": "Kaptur", "redrawn": true, "close": "19:30" },
+    "OH-10": { "holder": "R", "name": "Turner", "close": "19:30" },
+    "NC-09": { "holder": "R", "name": "Hudson", "close": "19:30" },
+    "NC-05": { "holder": "R", "name": "Foxx", "close": "19:30" },
+    "PA-08": { "holder": "R", "name": "Bresnahan", "close": "20:00" },
+    "MI-04": { "holder": "R", "name": "Huizenga", "close": "20:00" },
+    "MI-07": { "holder": "R", "name": "Barrett", "close": "20:00" },
+    "MI-10": { "holder": "R", "name": "Open seat", "close": "20:00" },
+    "NJ-07": { "holder": "R", "name": "Kean", "close": "20:00" },
+    "PA-01": { "holder": "R", "name": "Fitzpatrick", "close": "20:00" },
+    "ME-02": { "holder": "D", "name": "Open seat", "close": "20:00" },
+    "TX-15": { "holder": "R", "name": "De La Cruz", "redrawn": true, "close": "20:00" },
+    "NJ-02": { "holder": "R", "name": "Van Drew", "close": "20:00" },
+    "NY-17": { "holder": "R", "name": "Lawler", "close": "21:00" },
+    "AZ-01": { "holder": "R", "name": "Open seat", "close": "21:00" },
+    "AZ-06": { "holder": "R", "name": "Ciscomani", "close": "21:00" },
+    "CO-08": { "holder": "R", "name": "Evans", "close": "21:00" },
+    "WI-03": { "holder": "R", "name": "Van Orden", "close": "21:00" },
+    "NE-02": { "holder": "R", "name": "Open seat", "close": "21:00" },
+    "IA-01": { "holder": "R", "name": "Miller-Meeks", "close": "21:00" },
+    "IA-02": { "holder": "R", "name": "Open seat", "close": "21:00" },
+    "IA-03": { "holder": "R", "name": "Nunn", "close": "21:00" },
+    "CO-05": { "holder": "R", "name": "Crank", "close": "21:00" },
+    "MT-01": { "holder": "R", "name": "Open seat", "close": "22:00" },
+    "CA-22": { "holder": "R", "name": "Valadao", "redrawn": true, "close": "23:00" },
+    "CA-48": { "holder": "R", "name": "Open seat", "redrawn": true, "close": "23:00" },
+    "TX-09": { "holder": "D", "name": "TX-09", "redrawn": true, "close": "20:00", "hidden": true },
+    "TX-28": { "holder": "D", "name": "Cuellar", "redrawn": true, "close": "20:00", "hidden": true },
+    "TX-32": { "holder": "D", "name": "TX-32", "redrawn": true, "close": "20:00", "hidden": true },
+    "TX-34": { "holder": "D", "name": "Gonzalez", "redrawn": true, "close": "20:00", "hidden": true },
+    "TX-35": { "holder": "D", "name": "TX-35", "redrawn": true, "close": "20:00", "hidden": true },
+    "PA-07": { "holder": "R", "name": "Mackenzie", "close": "20:00", "hidden": true },
+    "PA-10": { "holder": "R", "name": "Perry", "close": "20:00", "hidden": true }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "electoral-contraceptive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Election-night House tracker: precinct returns vs. 2024, laid out as a Riptide/Tide/Wave/Tsunami board",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "serve": "node collector/serve.js",
+    "collect": "node collector/collect.js --once",
+    "live": "node collector/collect.js --watch --serve",
+    "demo": "node collector/collect.js --demo --once",
+    "baseline": "node collector/build-baseline.js",
+    "test": "node --test test/*.test.js"
+  }
+}

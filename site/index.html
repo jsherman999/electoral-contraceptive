@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>House Night Tracker</title>
+    <meta name="description" content="Live House bellwether board: precinct returns compared with how the same precincts voted in 2024." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='6' width='13' height='20' rx='3' fill='%231f5bc4'/%3E%3Crect x='17' y='6' width='13' height='20' rx='3' fill='%23d22b2b'/%3E%3C/svg%3E" />
+    <script src="config.js"></script>
+  </head>
+  <body>
+    <main class="page">
+      <h1 class="headline" id="headline">Loading…</h1>
+      <div id="banner"></div>
+      <div id="democtl"></div>
+      <div class="statusbar" id="statusbar" aria-live="polite"></div>
+
+      <div class="boardhead">
+        <div class="chamber" id="chamber">HOUSE</div>
+        <div class="legend">
+          <span class="item"><span class="chip d">D</span><span class="chip r">R</span> = party holding the seat</span>
+          <span class="item"><span class="star">★</span> redrawn since 2024</span>
+          <span class="item"><span class="dash"></span> GOP clears this bar — red signal</span>
+          <span class="item"><span class="ringchip"></span> signal being hit (model)</span>
+        </div>
+      </div>
+
+      <div class="board" id="board" role="grid" aria-label="Race board"></div>
+      <div class="later" id="later"></div>
+      <div class="footnote" id="footnote"></div>
+
+      <div class="footer">
+        Margins are D minus R as a share of all votes counted. <b>Swing</b> compares each precinct with how the
+        <i>same precinct and the same kinds of votes</i> (Election Day, early, mail) went in 2024, so early-vote
+        batches are not mistaken for a trend. <b>Projections</b> fill in uncounted precincts from 2024 plus the
+        swing so far. They are model estimates, not race calls. Click any card for precinct detail.
+        Baseline data: MIT Election Data + Science Lab 2024 precinct returns and the NC State Board of Elections.
+      </div>
+    </main>
+
+    <div class="overlay" id="overlay" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle" id="modal"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

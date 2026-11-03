@@ -1,0 +1,4 @@
+{
+  "_readme": "Manual race calls (for example the AP call). Add entries like \"NC-01\": {\"party\": \"D\", \"note\": \"AP 9:41 pm\"}. The collector rereads this file on every pass.",
+  "_example": { "party": "D", "note": "Keys starting with _ are ignored" }
+}
