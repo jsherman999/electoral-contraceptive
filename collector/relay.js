@@ -90,6 +90,7 @@ async function pass() {
       wrote += 1;
       const contests = new Set(out.rows.map((r) => r.contest));
       log(`${id}: ${out.rows.length} rows, ${contests.size} contests (${[...contests].slice(0, 4).join('; ')}${contests.size > 4 ? '; ...' : ''}) in ${Date.now() - t0} ms`);
+      if (out.meta?.note) log(`${id}: ${out.meta.note}`);
     } catch (e) {
       const refused = e.blocked || /HTTP 40[13]|bot protection/.test(e.message);
       if (refused) backoff.set(id, Date.now() + 5 * 60000);

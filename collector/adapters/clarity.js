@@ -31,6 +31,17 @@ async function currentVersion(origin, path) {
   return v;
 }
 
+/** Participating counties are strings like "Abbeville|115217|300123|11/8/2022 9:15:00 PM|8"; find them anywhere. */
+function findCountyList(node, depth = 0) {
+  if (!node || typeof node !== 'object' || depth > 6) return [];
+  if (Array.isArray(node) && node.length && node.every((x) => typeof x === 'string' && /^[^|]+\|\d+\|\d+/.test(x))) return node;
+  for (const v of Object.values(node)) {
+    const r = findCountyList(v, depth + 1);
+    if (r.length) return r;
+  }
+  return [];
+}
+
 const countyCache = new Map(); // county detail by results version, so unchanged counties aren't refetched
 
 // ---------------------------------------------------------------- discovery
@@ -138,9 +149,11 @@ export function parseDetailXml(xml, { county = null, contestFilters = null } = {
   const region = (xml.match(/<Region>([^<]*)<\/Region>/) || [])[1] || null;
   const contestRe = /<Contest\b([^>]*)>([\s\S]*?)<\/Contest>/g;
   let cm;
+  const allContests = [];
   while ((cm = contestRe.exec(xml))) {
     const ca = attrs(cm[1]);
     const contest = ca.text || '';
+    allContests.push(contest);
     if (contestFilters && !contestFilters.some((re) => re.test(contest))) continue;
     const choiceRe = /<Choice\b([^>]*)>([\s\S]*?)<\/Choice>/g;
     let ch;
@@ -180,7 +193,7 @@ export function parseDetailXml(xml, { county = null, contestFilters = null } = {
       reporting[a.name] = a;
     }
   }
-  return { rows, timestamp: ts, region, reporting };
+  return { rows, timestamp: ts, region, reporting, allContests };
 }
 
 async function detailFor(origin, path, ver, opts) {
@@ -220,7 +233,11 @@ async function fetchClarity(feed, ctx) {
   for (const f of ['json/en/electionsettings.json', 'json/electionsettings.json']) {
     try {
       const settings = (await get(`${origin}/${path}/${ver}/${f}`, { conditional: false, retries: 1 })).json();
-      const list = settings?.settings?.electiondetails?.participatingcounties || [];
+      const list = findCountyList(settings);
+      if (!list.length) {
+        settingsErr = new Error(`no county list in ${f} (keys: ${Object.keys(settings?.settings || settings || {}).slice(0, 12).join(', ')})`);
+        continue;
+      }
       counties = list.map((s) => {
         const [name, ceid, cver] = String(s).split('|');
         return { name, ceid, cver };
@@ -268,6 +285,7 @@ async function fetchClarity(feed, ctx) {
   if (!counties.length || failed.length) {
     try {
       const d = await detailFor(origin, path, ver, { contestFilters: filters });
+      if (!d.rows.length) failed.push(`statewide file matched no board contest; it has ${d.allContests.length} contests, e.g. ${d.allContests.filter((c) => /congress|house|rep|senat/i.test(c)).slice(0, 4).join(' | ') || d.allContests.slice(0, 4).join(' | ')}`);
       ts = ts || d.timestamp;
       for (const r of d.rows) if (r.level === 'county' && !covered.has(String(r.county).toUpperCase())) rows.push(r);
     } catch (e) {
