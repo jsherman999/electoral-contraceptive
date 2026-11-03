@@ -282,7 +282,7 @@ async function fetchClarity(feed, ctx) {
     );
   }
   // Counties we could not get precinct detail for fall back to the statewide county-level numbers.
-  if (!counties.length || failed.length) {
+  if (!counties.length || failed.length || !rows.length) {
     try {
       const d = await detailFor(origin, path, ver, { contestFilters: filters });
       if (!d.rows.length) failed.push(`statewide file matched no board contest; it has ${d.allContests.length} contests, e.g. ${d.allContests.filter((c) => /congress|house|rep|senat/i.test(c)).slice(0, 4).join(' | ') || d.allContests.slice(0, 4).join(' | ')}`);
