@@ -65,7 +65,7 @@
       },
       "note": "Iowa SOS election night reporting (Clarity), 2026 General = IA/127077 (from the results site, Nov 3). The host often challenges GitHub; relay from home with --feeds ...,ia"
     },
-    "ky": { "adapter": "json", "url": "", "hint": "Kentucky's live results (vrsws.sos.ky.gov/liveresults, XML data at /liveresults/data) refuse GitHub (HTTP 403); being checked from a home connection." },
+    "ky": { "adapter": "json", "url": "", "hint": "Kentucky's results site (vrsws.sos.ky.gov/liveresults) refuses scripted requests from GitHub and home connections (HTTP 403). KY-06 is filled in from the AP call (config/calls.json)." },
     "in": {
       "adapter": "in-enr",
       "url": "https://enr.indianavoters.in.gov/site/",
