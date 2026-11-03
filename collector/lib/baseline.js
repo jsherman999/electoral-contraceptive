@@ -42,6 +42,35 @@ function sumCells(cells) {
 const round1 = (x) => Math.round(x * 10) / 10;
 const tot = (c) => (c ? c[0] + c[1] + c[2] : 0);
 
+// ---------------------------------------------------------------- Michigan jurisdictions
+// Michigan numbers precincts within each city or township. The 2024 files say
+// "STERLING HEIGHTS CITY 12 Ward 0" / "SHELBY CHARTER TOWNSHIP 3 Ward 0", county sites (Clarity) say
+// "Sterling Heights, Pct 12" / "Shelby Twp, Pct 3". Several townships consolidated and renumbered their
+// precincts after 2024, so precinct numbers are only trusted where a jurisdiction kept the same set.
+const miName = (s) =>
+  String(s)
+    .toUpperCase()
+    .replace(/\bSAINT\b/g, 'ST')
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/** 2024 baseline name -> { jur: "T:SHELBY", num: 3 } */
+export function miBaselineKey(name) {
+  const m = String(name).match(/^(.*?)\s+(CHARTER\s+TOWNSHIP|CHARTER\s+TWP|TOWNSHIP|TWP|CITY|VILLAGE)\s+(\d+)(?:\s+WARD\s+\S+)?$/i);
+  if (!m) return null;
+  const type = /CITY/i.test(m[2]) ? 'C' : /VILLAGE/i.test(m[2]) ? 'V' : 'T';
+  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]) };
+}
+
+/** County-site name ("Shelby Twp, Pct 3", "Richmond City, Pct 1", "Grosse Pointe Shores 2") -> key */
+export function miLiveKey(name) {
+  const m = String(name).match(/^(.*?)(?:\s+(Charter\s+Township|Charter\s+Twp|Township|Twp|City|Village))?\s*,?\s*(?:(?:Pct|Precinct|Prec)\.?\s*)?#?\s*0*(\d+)$/i);
+  if (!m || !m[1].trim()) return null;
+  const type = !m[2] || /CITY/i.test(m[2]) ? 'C' : /VILLAGE/i.test(m[2]) ? 'V' : 'T';
+  return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]), label: `${m[1].trim()}${m[2] ? ` ${m[2]}` : ''}` };
+}
+
 export function loadBaseline(dir, st) {
   const key = `${dir}|${st}`;
   if (cache.has(key)) return cache.get(key);
@@ -61,6 +90,15 @@ export function loadBaseline(dir, st) {
     }
     const keys = precinctKeys(precinct);
     const rec = { county, precinct, pres, house, hd, keys, id: `${ck}|${keys[0] || precinct}`, virtual: vflag === undefined ? isVirtualPrecinct(precinct) : vflag === 1 };
+    if (idx.state === 'MI' && !rec.virtual) {
+      const mk = miBaselineKey(precinct);
+      if (mk) {
+        rec.mi = mk;
+        c.miJur ||= new Map();
+        if (!c.miJur.has(mk.jur)) c.miJur.set(mk.jur, []);
+        c.miJur.get(mk.jur).push(rec);
+      }
+    }
     c.pres = addCells(c.pres, pres);
     c.house = addCells(c.house, house);
     if (rec.virtual) {
@@ -118,6 +156,7 @@ export function attachBaseline(units, idx, opts = {}) {
   const out = [];
   const pending = [];
   const batches = new Map(); // county key -> { c, units: [], modes: Set }
+  const miGroups = new Map(); // county key -> { c, byJur: Map(jur -> [[unit, key]]) } (Michigan)
   let matched = 0;
 
   // 1. real precincts: exact names first, then looser keys
@@ -149,6 +188,17 @@ export function attachBaseline(units, idx, opts = {}) {
       } else u.mk = null;
       continue;
     }
+    if (c.miJur) {
+      const lk = miLiveKey(u.p);
+      if (lk && c.miJur.has(lk.jur)) {
+        out.pop(); // placed (or merged) by the Michigan join below
+        const g = miGroups.get(c.key) || { c, byJur: new Map() };
+        if (!g.byJur.has(lk.jur)) g.byJur.set(lk.jur, []);
+        g.byJur.get(lk.jur).push([u, lk]);
+        miGroups.set(c.key, g);
+        continue;
+      }
+    }
     const keys = precinctKeys(u.p);
     const rec = keys[0] ? c.exact.get(keys[0]) : null;
     if (rec && !used.has(rec.id)) {
@@ -170,6 +220,47 @@ export function attachBaseline(units, idx, opts = {}) {
         Object.assign(u, { _rec: list[0], _c: c, mk: i === 0 ? 'code' : 'digits' });
         break;
       }
+    }
+  }
+
+  // 1b. Michigan: match by precinct number where a city/township kept the same precincts as in 2024;
+  //     otherwise compare the whole jurisdiction, once all of its precincts are in.
+  for (const { c, byJur } of miGroups.values()) {
+    for (const [jur, members] of byJur) {
+      let recs = c.miJur.get(jur).filter((r) => !used.has(r.id));
+      if (!opts.statewide && opts.district != null) recs = recs.filter((r) => Number(r.hd) === opts.district);
+      if (!recs.length) {
+        for (const [u] of members) out.push(Object.assign(u, { mk: null }));
+        continue;
+      }
+      const byNum = new Map(recs.map((r) => [r.mi.num, r]));
+      const same = members.length === recs.length && byNum.size === recs.length && members.every(([, k]) => byNum.has(k.num));
+      if (same) {
+        for (const [u, k] of members) {
+          const r = byNum.get(k.num);
+          used.add(r.id);
+          out.push(Object.assign(u, { _rec: r, _c: c, mk: 'number' }));
+        }
+        continue;
+      }
+      // Precincts were redrawn: one unit for the jurisdiction, complete only when every precinct is.
+      for (const r of recs) used.add(r.id);
+      const merged = { c: members[0][0].c, p: `${members[0][1].label} (all ${members.length} precincts; renumbered since 2024)`, v: false, lvl: 'precinct', live: {}, mk: 'jurisdiction' };
+      let complete = true;
+      for (const [u] of members) {
+        for (const [m, cell] of Object.entries(u.live || {})) sumInto((merged.live[m] ||= [0, 0, 0]), cell);
+        const lt = Object.values(u.live || {}).reduce((a, cell) => a + tot(cell), 0);
+        const ed = u.live?.ED ? tot(u.live.ED) : null;
+        if (u.x === false || lt === 0 || ed === 0) complete = false;
+      }
+      merged.x = complete;
+      for (const kind of KINDS) {
+        let cells = null;
+        for (const r of recs) if (r[kind]) cells = addCells(cells, r[kind]);
+        merged[kind === 'pres' ? 'b' : 'bh'] = cells;
+      }
+      if (merged.b) matched += 1;
+      out.push(merged);
     }
   }
 

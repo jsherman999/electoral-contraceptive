@@ -75,6 +75,7 @@
     "oh": {
       "adapter": "cdf",
       "url": "https://liveresults.ohiosos.gov/Api/v1/download?filename=VSSC1622XmlFileBlob",
+      "ignoreTestUntil": "2026-11-03T19:30:00-05:00",
       "note": "Ohio SOS election-night XML (IEEE 1622.2 results format), county level."
     },
     "pa": { "adapter": "clarity", "url": "", "hint": "Pennsylvania: county results pages (Bucks, Lehigh, Northampton, Monroe, Lackawanna, Luzerne...). One feed per county." },

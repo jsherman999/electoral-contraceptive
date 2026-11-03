@@ -133,5 +133,13 @@ export async function fetchFeed(feed, ctx = {}) {
   const res = await get(feed.url, { timeoutMs: 120000, headers: { accept: 'application/xml,text/xml,*/*' } });
   const buf = isZip(res.buf) ? unzipEntry(res.buf, /\.xml$/i) : res.buf;
   const { rows, generated, isTest } = parseCdf(buf.toString('utf8'), { contestFilters: ctx.contestFilters });
-  return { rows, meta: { url: feed.url, sourceUpdatedAt: generated || res.headers.get('last-modified'), note: isTest ? 'source marks this file as TEST data' : undefined } };
+  // States load fake numbers into test files on election day. Before polls close (feed.ignoreTestUntil),
+  // test-flagged votes are zeroed so they can't show as results; after that the data is used regardless.
+  let note = isTest ? 'source marks this file as TEST data' : undefined;
+  if (isTest && feed.ignoreTestUntil && Date.now() < Date.parse(feed.ignoreTestUntil)) {
+    const n = rows.reduce((a, r) => a + (Number(r.votes) || 0), 0);
+    for (const r of rows) r.votes = 0;
+    note = `source marks this file as TEST data; ${n ? `${n} test votes ignored` : 'no votes'} until ${feed.ignoreTestUntil}`;
+  }
+  return { rows, meta: { url: feed.url, sourceUpdatedAt: generated || res.headers.get('last-modified'), note } };
 }
