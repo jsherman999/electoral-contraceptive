@@ -56,12 +56,19 @@ function datePatterns(iso) {
   );
 }
 
-/** Find this state's results URL for the configured election date. Returns { url, verified, note }. */
+/**
+ * Find this state's (or, with cfg.county, one county's) results URL for the configured election date.
+ * Returns { url, verified, note }.
+ */
 export async function discover(cfg, log = () => {}) {
   const st = String(cfg.state).toUpperCase();
-  const key = `${st}|${cfg.date}`;
+  // County sites live at /<ST>/<County>/<id>/ (spaces as underscores, e.g. MI/St_Clair).
+  const county = cfg.county ? String(cfg.county).replace(/\s+/g, '_') : null;
+  const base = county ? `${st}/${county}` : st;
+  const key = `${base}|${cfg.date}`;
   if (discovered.has(key)) return discovered.get(key);
-  const linkRe = new RegExp(`(https?:\\/\\/[a-z0-9.-]+)?\\/${st}\\/(\\d{5,7})(?=[\\/#?"'\\s<]|$)`, 'gi');
+  const segRe = county ? `${st}\\/${county.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}` : st;
+  const linkRe = new RegExp(`(https?:\\/\\/[a-z0-9.-]+)?\\/${segRe}\\/(\\d{5,7})(?=[\\/#?"'\\s<]|$)`, 'gi');
   const hostRe = cfg.hostPattern ? new RegExp(cfg.hostPattern, 'i') : /clarity|enr|electionresult/i;
   const cands = new Map();
   const seen = [];
@@ -91,15 +98,15 @@ export async function discover(cfg, log = () => {}) {
   const tried = [];
   let blockedErr = null;
   for (const c of ranked) {
-    tried.push(`${c.origin}/${st}/${c.eid}`);
+    tried.push(`${c.origin}/${base}/${c.eid}`);
     try {
-      const ver = await currentVersion(c.origin, `${st}/${c.eid}`);
-      const url = `${c.origin}/${st}/${c.eid}/`;
+      const ver = await currentVersion(c.origin, `${base}/${c.eid}`);
+      const url = `${c.origin}/${base}/${c.eid}/`;
       fallback ||= url;
       let text = '';
       for (const f of ['json/en/electionsettings.json', 'json/electionsettings.json', 'json/en/summary.json', 'json/summary.json']) {
         try {
-          text += (await get(`${c.origin}/${st}/${c.eid}/${ver}/${f}`, { conditional: false, retries: 0, timeoutMs: 20000 })).text().slice(0, 400000);
+          text += (await get(`${c.origin}/${base}/${c.eid}/${ver}/${f}`, { conditional: false, retries: 0, timeoutMs: 20000 })).text().slice(0, 400000);
         } catch {
           /* try the next file */
         }
@@ -110,7 +117,7 @@ export async function discover(cfg, log = () => {}) {
       if (hasDate && hasContest) {
         const hit = { url, verified: true, note: `discovered ${url} (election date ${cfg.date} and federal contests confirmed)` };
         discovered.set(key, hit);
-        log(`clarity ${st}: ${hit.note}`);
+        log(`clarity ${base}: ${hit.note}`);
         return hit;
       }
       if (hasContest && !withContest) withContest = url;
@@ -123,11 +130,11 @@ export async function discover(cfg, log = () => {}) {
     // Not cached, so the next pass tries again to confirm.
     const url = withContest || fallback;
     const hit = { url, verified: false, note: `using ${url}: ${withContest ? 'has federal contests, date not confirmed' : 'newest election found, not confirmed'} (checked ${tried.slice(0, 6).join(', ')})` };
-    log(`clarity ${st}: ${hit.note}`);
+    log(`clarity ${base}: ${hit.note}`);
     return hit;
   }
   if (blockedErr) {
-    const e = new Error(`${blockedErr.message}; newest ${st} election linked: ${ranked[0].origin}/${st}/${ranked[0].eid}/`);
+    const e = new Error(`${blockedErr.message}; newest ${base} election linked: ${ranked[0].origin}/${base}/${ranked[0].eid}/`);
     e.blocked = true;
     throw e;
   }

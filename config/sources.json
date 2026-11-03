@@ -84,6 +84,39 @@
       "url": "",
       "hint": "No automated source: the state results site (mvic.sos.state.mi.us) refuses scripted requests from GitHub and from home connections (HTTP 403), and mielections.us no longer answers. Set an adapter and url here if a usable county or state data file turns up."
     },
+    "mi-oakland": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": { "state": "MI", "county": "Oakland", "date": "2026-11-03", "pages": ["https://elections.oaklandcountymi.gov/"] },
+      "note": "Oakland County Clerk results (Clarity), precinct level, found on elections.oaklandcountymi.gov by date and federal contests. Parts of MI-07 and MI-10. Relay from home with --feeds ...,mi-oakland"
+    },
+    "mi-eaton": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": { "state": "MI", "county": "Eaton", "date": "2026-11-03", "pages": ["https://www.eatoncounty.org/"] },
+      "note": "Eaton County results (Clarity), precinct level, found on eatoncounty.org (MI/Eaton/127553 linked on Nov 3). MI-07. Relay from home with --feeds ...,mi-eaton"
+    },
+    "mi-vanburen": {
+      "adapter": "enhanced-voting",
+      "url": "https://app.enhancedvoting.com/results/public/van-buren-county-mi/elections/November2026",
+      "date": "2026-11-03",
+      "county": "Van Buren",
+      "note": "Van Buren County results (Enhanced Voting), precinct level, linked from vanburencountymi.gov. MI-04."
+    },
+    "mi-shiawassee": {
+      "adapter": "enhanced-voting",
+      "url": "https://app.enhancedvoting.com/results/public/shiawassee-county-mi/elections/11032026GeneralElection",
+      "date": "2026-11-03",
+      "county": "Shiawassee",
+      "note": "Shiawassee County results (Enhanced Voting), precinct level, linked from shiawassee.net. MI-07."
+    },
+    "mi-ingham": {
+      "adapter": "enhanced-voting",
+      "url": "https://app.enhancedvoting.com/results/public/ingham-county-mi/elections/November2026",
+      "date": "2026-11-03",
+      "county": "Ingham",
+      "note": "Ingham County results (Enhanced Voting), precinct level; the election ID is looked up by date from the county's election list. MI-07."
+    },
     "mi-macomb": {
       "adapter": "clarity",
       "url": "https://results.enr.clarityelections.com/MI/Macomb/127293/",
@@ -105,6 +138,8 @@
     "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." },
     "oh-relay": { "adapter": "relay", "file": "relay/oh.json", "note": "Ohio results relayed from a home computer (collector/relay.js)" },
     "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "maxAgeMinutes": 720, "note": "Michigan results imported by hand (collector/manual.js); trusted for 12 hours" },
+    "mi-oakland-relay": { "adapter": "relay", "file": "relay/mi-oakland.json", "note": "Oakland County results relayed from a home computer" },
+    "mi-eaton-relay": { "adapter": "relay", "file": "relay/mi-eaton.json", "note": "Eaton County results relayed from a home computer" },
     "mi-macomb-relay": { "adapter": "relay", "file": "relay/mi-macomb.json", "note": "Macomb County results relayed from a home computer (collector/relay.js --feeds ...,mi-macomb)" },
     "sc-relay": { "adapter": "relay", "file": "relay/sc.json", "note": "South Carolina results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "co-relay": { "adapter": "relay", "file": "relay/co.json", "note": "Colorado results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
@@ -124,7 +159,7 @@
     "IN": ["in"],
     "OH": [["oh", "oh-relay"]],
     "PA": ["pa"],
-    "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"]],
+    "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"], ["mi-oakland", "mi-oakland-relay"], ["mi-eaton", "mi-eaton-relay"], "mi-vanburen", "mi-shiawassee", "mi-ingham"],
     "NJ": ["nj"],
     "TX": ["tx"],
     "ME": ["me"],

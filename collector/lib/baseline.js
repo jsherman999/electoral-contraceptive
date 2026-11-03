@@ -63,9 +63,15 @@ export function miBaselineKey(name) {
   return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]) };
 }
 
-/** County-site name ("Shelby Twp, Pct 3", "Richmond City, Pct 1", "Grosse Pointe Shores 2") -> key */
+/**
+ * County-site name -> key. Clarity: "Shelby Twp, Pct 3", "Richmond City, Pct 1", "Grosse Pointe Shores 2".
+ * Enhanced Voting: "City of Bangor, Precinct 1", "Charter Township of Clinton, Precinct 3".
+ */
 export function miLiveKey(name) {
-  const m = String(name).match(/^(.*?)(?:\s+(Charter\s+Township|Charter\s+Twp|Township|Twp|City|Village))?\s*,?\s*(?:(?:Pct|Precinct|Prec)\.?\s*)?#?\s*0*(\d+)$/i);
+  let s = String(name).trim();
+  const of = s.match(/^(?:Charter\s+)?(City|Township|Twp|Village)\s+of\s+(.+?)(\s*,.*|\s+(?:Pct|Precinct|Prec)\b.*|\s+#?\d+)$/i);
+  if (of) s = `${of[2]} ${of[1]}${of[3]}`;
+  const m = s.match(/^(.*?)(?:\s+(Charter\s+Township|Charter\s+Twp|Township|Twp|City|Village))?\s*,?\s*(?:(?:Pct|Precinct|Prec)\.?\s*)?#?\s*0*(\d+)$/i);
   if (!m || !m[1].trim()) return null;
   const type = !m[2] || /CITY/i.test(m[2]) ? 'C' : /VILLAGE/i.test(m[2]) ? 'V' : 'T';
   return { jur: `${type}:${miName(m[1])}`, num: Number(m[3]), label: `${m[1].trim()}${m[2] ? ` ${m[2]}` : ''}` };

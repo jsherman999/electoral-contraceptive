@@ -7,12 +7,15 @@
 //   Each ballot option has groupResults (votes by vote type) and, at county level, precinctResults.
 //
 // Config: { "adapter": "enhanced-voting", "url": "<public page URL or direct export URL>", "date": "2026-11-03" }
+// A single county's site (app.enhancedvoting.com/results/public/van-buren-county-mi/...) has no county
+// names in its precinct results; set "county": "Van Buren" so rows carry it.
 // With "date", the election ID is looked up from the state's election list, so a wrong ID in the URL
 // is corrected automatically.
 import { get } from '../lib/http.js';
 
 export function parseEvUrl(url) {
-  const m = String(url).match(/^(https?:\/\/[^/]+)\/results\/public\/([^/]+)\/elections\/([^/#?]+)/i);
+  // County sites sometimes drop "/elections": app.enhancedvoting.com/results/public/shiawassee-county-mi/11032026GeneralElection
+  const m = String(url).match(/^(https?:\/\/[^/]+)\/results\/public\/(?!api\/)([^/]+)\/(?:elections\/)?([^/#?]+)/i);
   if (!m) return null;
   return { origin: m[1], state: m[2], id: m[3] };
 }
@@ -136,6 +139,7 @@ export async function fetchFeed(feed, ctx = {}) {
       const res = await get(url, { timeoutMs: 180000, headers: { accept: 'application/json' } });
       const json = res.json();
       const rows = walkExport(json, ctx.contestFilters);
+      if (feed.county) for (const r of rows) if (!r.county) r.county = feed.county;
       return {
         rows,
         meta: { url, sourceUpdatedAt: json?.asOf ?? json?.lastUpdated ?? json?.createdAt ?? res.headers.get('last-modified') ?? null, note },

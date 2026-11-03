@@ -13,6 +13,11 @@ test('michigan precinct names parse on both sides', () => {
   assert.equal(miLiveKey('Richmond City, Pct 1').jur, 'C:RICHMOND');
   assert.equal(miLiveKey('Richmond Twp, Pct 1').jur, 'T:RICHMOND');
   assert.deepEqual([miLiveKey('Grosse Pointe Shores 2').jur, miLiveKey('Grosse Pointe Shores 2').num], ['C:GROSSE POINTE SHORES', 2]);
+  // Enhanced Voting (Van Buren, Ingham, Shiawassee)
+  assert.deepEqual([miLiveKey('City of Bangor, Precinct 1').jur, miLiveKey('City of Bangor, Precinct 1').num], ['C:BANGOR', 1]);
+  assert.equal(miLiveKey('Township of Antwerp, Precinct 2').jur, 'T:ANTWERP');
+  assert.equal(miLiveKey('Charter Township of Meridian, Precinct 14').jur, 'T:MERIDIAN');
+  assert.equal(miBaselineKey('BANGOR CITY 1 Ward 0').jur, 'C:BANGOR');
 });
 
 const unit = (p, ed = 0, abs = 0) => ({ c: 'Macomb', p, lvl: 'precinct', v: false, x: null, live: { ED: [ed, ed, 0], MAIL: [abs, abs, 0] } });
