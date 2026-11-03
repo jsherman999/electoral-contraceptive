@@ -388,3 +388,46 @@ table.data td.muted { color: var(--muted); }
   .board .cell::before { content: attr(data-col); grid-column: 1 / -1; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; color: var(--ink-2); }
   .later { grid-template-columns: 1fr; }
 }
+
+/* ---------- darker page (the race detail panel stays light for its charts and tables) ---------- */
+html, body { background: #0b1220; }
+.page {
+  --ink: #e7edf8;
+  --ink-2: #aeb9cf;
+  --muted: #8592ab;
+  --line: #2a3756;
+  --line-2: #1e2a44;
+  --panel: #111a2c;
+  --cell: #121c31;
+  --cell-line: #233253;
+  --cell-rip: #24141b;
+  --cell-rip-line: #4b2230;
+  color: var(--ink);
+}
+.page .headline,
+.page .chamber,
+.page .timehead,
+.page .later .lbl,
+.page .later .grp .tm { color: #f2f6ff; }
+.page .timehead small { color: var(--ink-2); }
+.page .boardhead { border-bottom-color: #c9d6f2; }
+.page .timecell { background: #1a2a54; box-shadow: inset 0 0 0 1px #2c427a; }
+.page .statusbar .t-D { color: #8ab4ff; }
+.page .statusbar .t-R { color: #ff9a9a; }
+.page .footer a, .page .linkbtn { color: #8ab4ff; }
+.page .banner { background: #2a2208; border-color: #6b5410; color: #f3dc9a; }
+.page .banner a { color: #ffd76a; }
+.page .banner.err { background: #2c1214; border-color: #6e2a2f; color: #ffb4b4; }
+.page .democtl { background: #1d1808; border-color: #8a6a12; color: #f1d892; }
+.page .democtl b, .page .democtl .clock { color: #ffe9a8; }
+.page .democtl select, .page .democtl button { background: #2a2310; color: #ffe9a8; border-color: #6b5410; }
+.page .democtl input[type=range] { accent-color: #f5b700; }
+.page .card.dashed { background: rgba(210, 43, 43, 0.08); color: #ff8f8f; }
+.page .card.dashed .who { color: #ff9c9c; }
+.page .card.dashed .pill { border-color: transparent; }
+.page .card.dashed.hit, .page .card.dashed.hit-strong { background: rgba(210, 43, 43, 0.24); }
+.page .card.dashed .dots i.pend { background: #4a5878; }
+.page .card.hit { box-shadow: 0 0 0 2px #0b1220, 0 0 0 4px var(--gold), var(--shadow); }
+.page .card.hit-strong { box-shadow: 0 0 0 2px #0b1220, 0 0 0 5px var(--gold), 0 0 16px rgba(245, 183, 0, 0.55); }
+.page .legend .ringchip { box-shadow: 0 0 0 2px #0b1220, 0 0 0 4px var(--gold); }
+.page .footnote { border-left-color: var(--line); }
