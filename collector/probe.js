@@ -2,10 +2,13 @@
 // Fetch URLs and print what came back: status, type, size, a snippet, and any results-looking links.
 // Used through the "Probe URLs" workflow to look at election sites from GitHub's network.
 //   node collector/probe.js <url> [<url> ...]
+//   GREP="regex" prints matching snippets; LINKS="regex" limits the link list.
 import { get } from './lib/http.js';
 
 const LINK = /(?:href|src)\s*=\s*["']([^"'#]+[^"']*)["']/gi;
 const INTERESTING = /result|clarity|enr|election|export|api|\/[A-Z]{2}\/\d{5,7}|\.json|\.zip|\.txt|\.csv|\.js(\?|$)/i;
+// LINKS="regex" lists only matching links (e.g. LINKS=clarity), to keep the output short.
+const LINKS_RE = process.env.LINKS ? new RegExp(process.env.LINKS, 'i') : INTERESTING;
 
 for (const url of process.argv.slice(2)) {
   console.log(`\n=== ${url}`);
@@ -25,7 +28,7 @@ for (const url of process.argv.slice(2)) {
     const baseUrl = base ? new URL(base, url).href : url;
     for (const m of text.matchAll(LINK)) {
       const abs = new URL(m[1], baseUrl).href;
-      if (INTERESTING.test(abs)) links.add(abs);
+      if (LINKS_RE.test(abs)) links.add(abs);
     }
     // GREP="regex" prints matching snippets, e.g. API paths inside a JavaScript bundle.
     if (process.env.GREP) {
@@ -42,7 +45,7 @@ for (const url of process.argv.slice(2)) {
       console.log(`grep /${process.env.GREP}/ (${hits.size}):`);
       for (const h of [...hits].slice(0, 40)) console.log(`  ...${h}...`);
     }
-    for (const m of text.matchAll(/https?:\/\/[^\s"'<>]+/g)) if (INTERESTING.test(m[0])) links.add(m[0]);
+    for (const m of text.matchAll(/https?:\/\/[^\s"'<>]+/g)) if (LINKS_RE.test(m[0])) links.add(m[0]);
     const list = [...links].slice(0, 80);
     console.log(`links (${links.size}):`);
     for (const l of list) console.log(`  ${l}`);
