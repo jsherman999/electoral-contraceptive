@@ -33,8 +33,9 @@ import * as delimited from './adapters/delimited.js';
 import * as jsonAdapter from './adapters/json.js';
 import * as cdf from './adapters/cdf.js';
 import * as txCivix from './adapters/tx-civix.js';
+import * as relay from './adapters/relay.js';
 
-const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix };
+const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix, relay };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');
@@ -64,12 +65,23 @@ function writeJSON(file, data) {
 }
 
 // ------------------------------------------------------------------ race -> feed plan
+// A plan entry names one feed, or a fallback group (["oh", "oh-relay"]): the first feed in the group
+// that returned data on this pass is used.
 function racePlan(id, sources) {
   const st = id.slice(0, 2);
   let spec = sources.races?.[id];
-  if (spec == null) spec = (sources.stateFeeds?.[st] || []).map((feed) => ({ feed, contest: 'auto' }));
+  if (spec == null) spec = sources.stateFeeds?.[st] || [];
   if (!Array.isArray(spec)) spec = [spec];
-  return spec.map((s) => (typeof s === 'string' ? { feed: s, contest: 'auto' } : s)).map((s) => ({ ...s, re: contestMatcher(s.contest, id) }));
+  return spec
+    .map((s) => (typeof s === 'string' ? { feed: s, contest: 'auto' } : Array.isArray(s) ? { group: s, feed: s[0], contest: 'auto' } : s))
+    .map((s) => ({ ...s, re: contestMatcher(s.contest, id) }));
+}
+
+function resolveGroup(p, feedStatus) {
+  if (!p.group) return p.feed;
+  const live = p.group.find((f) => feedStatus[f]?.ok && feedCache.get(f)?.rows?.length);
+  if (live) return live;
+  return p.group.find((f) => feedCache.get(f)?.rows?.length) || p.group[0];
 }
 
 // ------------------------------------------------------------------ feeds
@@ -90,7 +102,7 @@ async function fetchFeeds(needed, sources) {
           return;
         }
         const base = { id, adapter: feed.adapter, url: feed.url || null, fetchedAt, note: feed.note };
-        if (!feed.url && !feed.discover) {
+        if (!feed.url && !feed.discover && !feed.file) {
           status[id] = { ...base, ok: false, configured: false, error: 'no URL configured yet' };
           return;
         }
@@ -153,7 +165,8 @@ async function runOnce(outDir) {
 
   const plans = new Map(ids.map((id) => [id, racePlan(id, sources)]));
   const needed = new Map();
-  for (const plan of plans.values()) for (const p of plan) needed.set(p.feed, [...(needed.get(p.feed) || []), p.re]);
+  for (const plan of plans.values())
+    for (const p of plan) for (const f of p.group || [p.feed]) needed.set(f, [...(needed.get(f) || []), p.re]);
   const feedStatus = await fetchFeeds(needed, sources);
 
   const races = {};
@@ -161,6 +174,7 @@ async function runOnce(outDir) {
     const plan = plans.get(id);
     const rows = [];
     for (const p of plan) {
+      p.feed = resolveGroup(p, feedStatus);
       const fr = feedCache.get(p.feed);
       if (!fr) continue;
       const counties = p.counties ? new Set(p.counties.map((c) => c.toUpperCase())) : null;

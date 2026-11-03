@@ -49,6 +49,31 @@ node collector/collect.js --once --only NC-01  # one pass for one race
 node collector/collect.js --demo --serve       # simulated results through the whole pipeline
 ```
 
+## Relaying Ohio and Michigan from your own computer
+
+Some state sites refuse requests from GitHub's servers but answer a normal home connection. Ohio's
+results XML returned 403 to GitHub on one run, and Michigan's site doesn't respond to GitHub at all.
+`collector/relay.js` fetches those feeds from your computer and pushes the parsed results to an
+`election-data-relay` branch. The GitHub collector reads that branch on every pass and uses it whenever
+its own direct fetch fails, so the public board shows those races for everyone.
+
+On a Mac (Node 18+: `brew install node`), from a clone you can push to:
+
+```bash
+git clone https://github.com/jsherman999/electoral-contraceptive && cd electoral-contraceptive
+node collector/relay.js --feeds oh --once   # test: one Ohio pass, pushed to election-data-relay
+caffeinate -i node collector/relay.js       # all night: Ohio + Michigan every 90 s (caffeinate keeps the Mac awake)
+```
+
+- Leave it running in a Terminal window. If it stops, relayed data is ignored after 15 minutes, and the
+  board's Sources line says the relay stopped.
+- If a site refuses your computer too, the relay says so and retries every 5 minutes. It doesn't try
+  to get around the refusal.
+- **Michigan** has no data URL configured yet. Find it with
+  `node collector/probe.js https://mielections.us/election/results/`, then set `feeds.mi` in
+  `config/sources.json` (adapter and URL) and commit. The relay picks it up on its next pass.
+- Run it on one computer only.
+
 ## Adding feeds on election night
 
 Most states publish their 2026 results URLs only on the night. Feeds live in

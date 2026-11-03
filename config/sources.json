@@ -75,7 +75,11 @@
       "note": "Ohio SOS election-night XML (IEEE 1622.2 results format), county level."
     },
     "pa": { "adapter": "clarity", "url": "", "hint": "Pennsylvania: county results pages (Bucks, Lehigh, Northampton, Monroe, Lackawanna, Luzerne...). One feed per county." },
-    "mi": { "adapter": "clarity", "url": "", "hint": "Michigan: county clerks (Kent, Ottawa, Kalamazoo, Macomb...). One feed per county." },
+    "mi": {
+      "adapter": "delimited",
+      "url": "",
+      "hint": "Michigan SOS results (mielections.us) do not answer GitHub's servers. From a home computer, run: node collector/probe.js https://mielections.us/election/results/ and set this feed's adapter/url to the results data file it finds; collector/relay.js then relays it."
+    },
     "nj": { "adapter": "clarity", "url": "", "hint": "New Jersey: county clerks. One feed per county." },
     "tx": {
       "adapter": "tx-civix",
@@ -90,6 +94,8 @@
     "ne": { "adapter": "clarity", "url": "", "hint": "Nebraska: Douglas / Sarpy county results." },
     "mt": { "adapter": "json", "url": "", "hint": "Montana SOS results (county level)." },
     "ca": { "adapter": "delimited", "url": "", "hint": "California: county registrars (Kern, Tulare, Kings; San Diego, Riverside)." },
+    "oh-relay": { "adapter": "relay", "file": "relay/oh.json", "note": "Ohio results relayed from a home computer (collector/relay.js)" },
+    "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "note": "Michigan results relayed from a home computer (collector/relay.js)" },
     "ks": { "adapter": "json", "url": "", "hint": "Kansas SOS election night results (Senate race only on this board)." },
     "ak": { "adapter": "json", "url": "", "hint": "Alaska Division of Elections results (Senate race only on this board; polls close 12 am ET)." }
   },
@@ -103,9 +109,9 @@
     "IA": ["ia"],
     "KY": ["ky"],
     "IN": ["in"],
-    "OH": ["oh"],
+    "OH": [["oh", "oh-relay"]],
     "PA": ["pa"],
-    "MI": ["mi"],
+    "MI": [["mi", "mi-relay"]],
     "NJ": ["nj"],
     "TX": ["tx"],
     "ME": ["me"],

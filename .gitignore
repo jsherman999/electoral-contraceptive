@@ -1,5 +1,6 @@
 node_modules/
 site/results/
 .publish/
+.relay/
 *.tmp
 .DS_Store
