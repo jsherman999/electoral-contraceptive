@@ -213,16 +213,24 @@ async function fetchClarity(feed, ctx) {
   const path = `${st}/${eid}`;
   const ver = await currentVersion(origin, path);
   let counties = [];
-  try {
-    const settings = (await get(`${origin}/${path}/${ver}/json/electionsettings.json`, { conditional: false })).json();
-    const list = settings?.settings?.electiondetails?.participatingcounties || [];
-    counties = list.map((s) => {
-      const [name, ceid, cver] = String(s).split('|');
-      return { name, ceid, cver };
-    });
-  } catch (e) {
-    ctx.log?.(`clarity ${path}: no county list (${e.message}); using statewide county-level detail`);
+  // Older Clarity sites keep settings at json/electionsettings.json, newer ones at json/en/.
+  let settingsErr = null;
+  for (const f of ['json/en/electionsettings.json', 'json/electionsettings.json']) {
+    try {
+      const settings = (await get(`${origin}/${path}/${ver}/${f}`, { conditional: false, retries: 1 })).json();
+      const list = settings?.settings?.electiondetails?.participatingcounties || [];
+      counties = list.map((s) => {
+        const [name, ceid, cver] = String(s).split('|');
+        return { name, ceid, cver };
+      });
+      settingsErr = null;
+      break;
+    } catch (e) {
+      settingsErr = e;
+      if (e.blocked) break;
+    }
   }
+  if (settingsErr) ctx.log?.(`clarity ${path}: no county list (${settingsErr.message}); using statewide county-level detail`);
   const want = feed.counties ? new Set(feed.counties.map((c) => c.toUpperCase())) : null;
   if (want) counties = counties.filter((c) => want.has(c.name.toUpperCase()) || want.has(c.name.replace(/_/g, ' ').toUpperCase()));
 
