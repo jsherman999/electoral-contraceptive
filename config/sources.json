@@ -56,12 +56,14 @@
         "state": "IA",
         "date": "2026-11-03",
         "pages": [
+          "https://sos.iowa.gov/iowans/election-results-statistics",
+          "https://sos.iowa.gov/elections/results/index.html",
           "https://results.enr.clarityelections.com/IA/",
           "https://electionresults.iowa.gov/IA/",
           "https://www.crawfordcounty.iowa.gov/elections/info/2026_general_election_2026_11_03/"
         ]
       },
-      "note": "Iowa SOS election night reporting runs on Clarity at electionresults.iowa.gov. Tonight's election ID was not found (sos.iowa.gov refuses automated access) and the Clarity host answers automated requests with a bot challenge."
+      "note": "Iowa SOS election night reporting (Clarity, electionresults.iowa.gov). sos.iowa.gov and the Clarity host refuse GitHub, so relay from home: collector/relay.js --feeds ...,ia"
     },
     "ky": { "adapter": "clarity", "url": "", "hint": "Kentucky: state results are county level; use county clerk pages (Clarity county URLs work, add one feed per county)." },
     "in": { "adapter": "json", "url": "", "hint": "Indiana ENR (enr.indianavoters.in.gov) or county pages. Configure json/delimited mapping." },
