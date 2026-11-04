@@ -59,5 +59,21 @@
   "PA-10": {
     "party": "D",
     "note": "AP, evening of Nov 3 (AP story via PBS NewsHour), Janelle Stelson"
+  },
+  "PA-08": {
+    "party": "D",
+    "note": "AP 10:41 pm ET, Paige Cognetti"
+  },
+  "PA-07": {
+    "party": "D",
+    "note": "AP 10:27 pm ET, Bob Brooks"
+  },
+  "KS-SEN": {
+    "party": "D",
+    "note": "AP 11:24 pm ET, Adam Hamilton"
+  },
+  "IA-SEN": {
+    "party": "D",
+    "note": "AP, evening of Nov 3 (Iowa Capital Dispatch), Josh Turek"
   }
 }
