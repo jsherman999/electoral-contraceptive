@@ -134,8 +134,34 @@ export function loadBaseline(dir, st) {
       c.alt.set(k, list);
     }
   }
+  if (idx.state === 'TX') addTexasCountyCodeKeys(idx);
   cache.set(key, idx);
   return idx;
+}
+
+/**
+ * Texas 2024 precinct names carry the county's number (alphabetical, 1-254) in front of the precinct:
+ * Dallas (57) precinct 1004 is "571004", Harris (101) precinct 1 is "1010001". County sites say "1004".
+ * Add the precinct number alone as a key, but only for counties where (nearly) every name starts with
+ * the expected county number, so a wrong guess can't create false matches.
+ */
+function addTexasCountyCodeKeys(idx) {
+  const counties = [...idx.counties.values()].sort((a, b) => a.name.localeCompare(b.name));
+  counties.forEach((c, i) => {
+    const code = String(i + 1);
+    const recs = [];
+    for (const r of c.exact.values()) if (r) recs.push(r);
+    for (const list of c.alt.values()) for (const r of list) recs.push(r);
+    const uniq = [...new Set(recs)].filter((r) => !r.virtual);
+    if (!uniq.length) return;
+    const hits = uniq.filter((r) => /^\d+$/.test(r.precinct) && r.precinct.startsWith(code) && r.precinct.length > code.length);
+    if (hits.length < 0.9 * uniq.length) return;
+    c.txCode = code;
+    for (const r of hits) {
+      const k = precinctKeys(r.precinct.slice(code.length))[0];
+      if (k && !c.exact.has(k)) c.exact.set(k, r);
+    }
+  });
 }
 
 function findCounty(idx, county) {
