@@ -69,6 +69,7 @@ export function analyzeRace(units, opts = {}) {
   const counties = new Map();
   const baseAll = [0, 0, 0];
   let comparedVotes = 0;
+  let unknownCounty = false; // a county total with votes but no way to tell how complete it is
 
   const county = (c) => {
     let k = counties.get(c);
@@ -110,6 +111,12 @@ export function analyzeRace(units, opts = {}) {
     if (u.lvl === 'county' && u.pr && u.pr.tot > 0) complete = LT > 0 && u.pr.rep >= u.pr.tot;
     else if (u.x === true || u.x === false) complete = u.x && LT > 0;
     else if (LT === 0) complete = false;
+    // A county total with no precinct counts (Ohio's file, Clarity's county fallback) can't be known to
+    // be complete; its first report is often only early and mail votes, so don't treat it as final.
+    else if (u.lvl === 'county') {
+      complete = false;
+      unknownCounty = true;
+    }
     else if (modal) complete = bModes.every((m) => tot(b[m]) < Math.max(5, 0.05 * BT) || tot(live[m]) > 0);
     else if (liveHasModes && 'ED' in live) complete = tot(live.ED) > 0;
     else complete = true;
@@ -240,6 +247,12 @@ export function analyzeRace(units, opts = {}) {
       }
     } else if (!u.v && status === 'N') {
       pending.push(x);
+    } else if (u.lvl === 'county' && status === 'P' && u.pr && u.pr.rep > 0 && u.pr.tot > u.pr.rep && LT > 0) {
+      // No 2024 match (a split county): scale up by the precincts still out, at the county's current margin.
+      const t = (LT * (u.pr.tot - u.pr.rep)) / u.pr.rep;
+      const mg = mfrac(x.lt) ?? 0;
+      pd += t * mg;
+      pt += t;
     }
     projDiff += pd;
     projT += pt;
@@ -266,7 +279,17 @@ export function analyzeRace(units, opts = {}) {
 
   const T = tot(actual);
   const finalT = T + projT;
-  const expectedPct = finalT > 0 ? T / finalT : 0;
+  let expectedPct = finalT > 0 ? T / finalT : 0;
+  // Nothing matched to 2024 means nothing to project from; use the share of precincts (or counties) in.
+  if (T > 0 && tot(baseAll) === 0) {
+    let n = 0;
+    let done = 0;
+    for (const k of counties.values()) {
+      n += k.n;
+      done += k.full + 0.5 * k.partial;
+    }
+    if (n > 0) expectedPct = Math.min(expectedPct, done / n);
+  }
   const projMargin = finalT > 0 ? ((actual[0] - actual[1] + projDiff) / finalT) * 100 : null;
   const comparedShare = T > 0 ? comparedVotes / T : 0;
   let sigma = 1 + 9 * Math.sqrt(Math.max(0, 1 - expectedPct));
@@ -282,6 +305,9 @@ export function analyzeRace(units, opts = {}) {
     else if (z >= 0.67) confidence = 'lean';
     else confidence = 'tossup';
   }
+  // Margins from county totals of unknown completeness, with nothing matched to 2024 to project from,
+  // are often early and mail votes only: don't call them anything but too early.
+  if (T > 0 && unknownCounty && tot(baseAll) === 0) confidence = 'too-early';
 
   let nTotal = 0;
   let nFull = 0;

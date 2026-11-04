@@ -208,3 +208,19 @@ test('race history starts over when the vote count collapses (a wrong source was
   const ok = [[1, 0, null, null, 0, 1000]];
   assert.equal(buildRace('MI-SEN', [unit(800, 700)], { history: ok }).detail.history.length, 2);
 });
+
+test('county totals without precinct counts are not treated as complete (Ohio early votes)', async () => {
+  const { analyzeRace } = await import('../site/js/shared/model.js');
+  // early votes only in one county, no 2024 match (split county), no precinct counts
+  const a = analyzeRace([
+    { c: 'Hamilton', p: null, lvl: 'county', live: { TOTAL: [53000, 18000, 300] } },
+    { c: 'Warren', p: null, lvl: 'county', live: {} },
+  ]);
+  assert.equal(a.summary.swing, null);
+  assert.ok(a.summary.projection.expectedPct < 0.5);
+  assert.equal(a.summary.projection.confidence, 'too-early');
+  // the same county with a 2024 match is projected from 2024, not counted as final
+  const b = analyzeRace([{ c: 'Hamilton', p: null, lvl: 'county', live: { TOTAL: [53000, 18000, 300] }, b: { TOTAL: [200000, 180000, 5000] }, mk: 'county' }]);
+  assert.equal(b.summary.swing, null);
+  assert.ok(b.summary.projection.expectedPct < 0.5);
+});
