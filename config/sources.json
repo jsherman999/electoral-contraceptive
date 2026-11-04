@@ -123,6 +123,12 @@
       "note": "Macomb County Clerk unofficial detailed results (Clarity), precinct level; linked from macombgov.org/departments/clerk-register-deeds/elections on Nov 3. Macomb is 250 of MI-10's 288 precincts. Clarity often challenges GitHub; relay from home with --feeds ...,mi-macomb"
     },
     "nj": { "adapter": "clarity", "url": "", "hint": "New Jersey: county clerks. One feed per county." },
+    "tx-harris": {
+      "adapter": "harris",
+      "page": "https://app.harrisvotes.com/electionresults/electionday",
+      "date": "November 03, 2026",
+      "note": "Harris County live results (app.harrisvotes.com), countywide by vote type; the Texas SOS file lagged Harris on election night."
+    },
     "tx-dallas": {
       "adapter": "clarity",
       "url": "",
@@ -182,7 +188,7 @@
     "PA": ["pa"],
     "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"], ["mi-eaton", "mi-eaton-relay"], "mi-vanburen", "mi-shiawassee", "mi-ingham"],
     "NJ": ["nj"],
-    "TX": ["tx", ["tx-dallas", "tx-dallas-relay"], ["tx-tarrant", "tx-tarrant-relay"], ["tx-travis", "tx-travis-relay"]],
+    "TX": ["tx", "tx-harris", ["tx-dallas", "tx-dallas-relay"], ["tx-tarrant", "tx-tarrant-relay"], ["tx-travis", "tx-travis-relay"]],
     "ME": ["me"],
     "NY": ["ny"],
     "AZ": ["az"],

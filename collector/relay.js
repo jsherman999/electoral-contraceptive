@@ -26,8 +26,9 @@ import * as jsonAdapter from './adapters/json.js';
 import * as cdf from './adapters/cdf.js';
 import * as txCivix from './adapters/tx-civix.js';
 import * as inEnr from './adapters/in-enr.js';
+import * as harris from './adapters/harris.js';
 
-const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix, 'in-enr': inEnr };
+const ADAPTERS = { ncsbe, clarity, 'enhanced-voting': enhanced, 'fl-dos': fldos, delimited, json: jsonAdapter, cdf, 'tx-civix': txCivix, 'in-enr': inEnr, harris };
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const flag = (k) => args.includes(k);

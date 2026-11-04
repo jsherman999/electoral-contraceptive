@@ -237,3 +237,20 @@ test('county totals from two feeds are not added together; precinct detail wins 
   assert.equal(built.units.length, 2);
   assert.ok(built.units.every((u) => u.lvl === 'precinct'));
 });
+
+test('harris: countywide rows by vote type with precinct counts; replaces the state file total', async () => {
+  const { parseHarris } = await import('../collector/adapters/harris.js');
+  const { contestMatcher } = await import('../collector/lib/contest.js');
+  const { dedupeCountyTotals } = await import('../collector/collect.js');
+  const json = { contests: [
+    { t: 'United States Senator', tp: 1224, pr: 300, ca: ['KEN PAXTON (REP)', 'JAMES TALARICO (DEM)', 'Avery Ayers (W)'], ab: [10, 20, 0], ev: [100, 300, 1], ed: [50, 40, 0] },
+    { t: 'State Senator, District 4', tp: 75, pr: 0, ca: ['A (REP)'], ab: [1], ev: [1], ed: [1] },
+  ] };
+  const rows = parseHarris(json, { contestFilters: [contestMatcher('auto', 'TX-SEN')] });
+  assert.equal(rows.length, 9);
+  const tal = rows.filter((r) => r.candidate === 'JAMES TALARICO');
+  assert.deepEqual(tal.map((r) => [r.mode, r.votes, r.party, r.prTot, r.prRep]), [['MAIL', 20, 'DEM', 1224, 300], ['EV', 300, 'DEM', 1224, 300], ['ED', 40, 'DEM', 1224, 300]]);
+  // the state file's HARRIS county total (zero, or later catching up) is not added on top
+  const merged = dedupeCountyTotals([...rows.map((r) => ({ ...r, _feed: 'tx-harris' })), { _feed: 'tx', county: 'HARRIS', precinct: null, level: 'county', contest: 'U. S. SENATOR', candidate: 'JAMES TALARICO', party: 'DEM', mode: 'TOTAL', votes: 100 }]);
+  assert.ok(merged.every((r) => r._feed === 'tx-harris'));
+});
