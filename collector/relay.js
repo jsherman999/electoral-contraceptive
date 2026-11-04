@@ -8,7 +8,8 @@
 //   node collector/relay.js --feeds oh --once   # one pass, Ohio only (good first test)
 //   node collector/relay.js --no-push           # fetch and write files, but don't push
 //
-// Options: --feeds oh  --interval 90  --branch election-data-relay  --dir .relay  --once  --no-push
+// Options: --feeds oh  --interval 150  --branch election-data-relay  --dir .relay  --once  --no-push
+//          --max-downloads 8 (county precinct files per Clarity feed per pass; keeps request volume low)
 //          --label "home relay" (how the board's Sources line describes this relay)
 // Needs: Node 18+, a clone of this repo you can push to. On a Mac, keep it awake with:
 //   caffeinate -i node collector/relay.js
@@ -40,7 +41,7 @@ const log = (...a) => console.log(new Date().toLocaleTimeString(), ...a);
 const readJSON = (f) => JSON.parse(fs.readFileSync(path.join(root, f), 'utf8'));
 
 const feedIds = opt('--feeds', 'oh').split(',').map((s) => s.trim()).filter(Boolean);
-const interval = Number(opt('--interval', 90)) * 1000;
+const interval = Number(opt('--interval', 150)) * 1000;
 const branch = opt('--branch', 'election-data-relay');
 const dir = path.resolve(root, opt('--dir', '.relay'));
 const push = !flag('--no-push');
@@ -55,13 +56,23 @@ function filtersFor(feedId, board, sources) {
   return { states, res };
 }
 
-const backoff = new Map(); // feed -> time to retry after a refusal
+// Feeds on one platform share its bot protection: when Clarity refuses one feed it is refusing this
+// computer, so every Clarity feed pauses, for 5, 10, 20 and then 30 minutes at a time.
+const group = (id, feed) => (feed.adapter === 'clarity' ? 'clarity' : id);
+const backoff = new Map(); // group -> time to retry after a refusal
+const strikes = new Map(); // group -> refusals in a row
+const lookupWait = new Map(); // feed -> time to retry after its election could not be found
+// The relay is one computer asking many sites: at most this many county precinct files per Clarity
+// feed per pass (the rest keep their last file, or the county total, until a later pass).
+const maxDownloads = Number(opt('--max-downloads', 8));
+const fmt = (t) => new Date(t).toLocaleTimeString();
 
 async function pass() {
   const board = readJSON('site/board.json');
   const sources = readJSON('config/sources.json');
   fs.mkdirSync(path.join(dir, 'relay'), { recursive: true });
   let wrote = 0;
+  const paused = [];
   for (const id of feedIds) {
     const feed = sources.feeds?.[id];
     if (!feed) {
@@ -72,11 +83,18 @@ async function pass() {
       log(`${id}: no URL configured yet. Find the state's results data URL (try: node collector/probe.js <url>) and set feeds.${id}.url in config/sources.json`);
       continue;
     }
-    if (backoff.get(id) > Date.now()) continue;
+    const g = group(id, feed);
+    if (backoff.get(g) > Date.now()) {
+      paused.push(id);
+      continue;
+    }
+    if (lookupWait.get(id) > Date.now()) continue;
     const { states, res } = filtersFor(id, board, sources);
     const t0 = Date.now();
     try {
-      const out = await ADAPTERS[feed.adapter].fetchFeed(feed, { contestFilters: res, log });
+      const f = feed.adapter === 'clarity' ? { concurrency: 2, maxDownloads, ...feed } : feed;
+      const out = await ADAPTERS[feed.adapter].fetchFeed(f, { contestFilters: res, log });
+      strikes.delete(g);
       const record = {
         feed: id,
         adapter: feed.adapter,
@@ -94,11 +112,22 @@ async function pass() {
       log(`${id}: ${out.rows.length} rows, ${contests.size} contests (${[...contests].slice(0, 4).join('; ')}${contests.size > 4 ? '; ...' : ''}) in ${Date.now() - t0} ms`);
       if (out.meta?.note) log(`${id}: ${out.meta.note}`);
     } catch (e) {
-      const refused = e.blocked || /HTTP 40[13]|bot protection/.test(e.message);
-      if (refused) backoff.set(id, Date.now() + 5 * 60000);
-      log(`${id}: failed: ${e.message}${refused ? ' (the site refused this computer too; trying again in 5 minutes)' : ''}`);
+      const refused = e.blocked || /HTTP 40[135]|HTTP 429|bot protection/.test(e.message);
+      if (refused) {
+        const n = (strikes.get(g) || 0) + 1;
+        strikes.set(g, n);
+        const mins = Math.min(30, 5 * 2 ** (n - 1));
+        backoff.set(g, Date.now() + mins * 60000);
+        log(`${id}: failed: ${e.message}`);
+        log(`${g === 'clarity' ? 'Clarity (all Clarity feeds)' : id}: the site is refusing this computer; pausing ${mins} minutes, until ${fmt(backoff.get(g))}`);
+      } else {
+        // An election that isn't posted yet is looked for again every 10 minutes, not every pass.
+        if (/could not find the/.test(e.message)) lookupWait.set(id, Date.now() + 10 * 60000);
+        log(`${id}: failed: ${e.message}`);
+      }
     }
   }
+  if (paused.length) log(`paused (site refused this computer): ${paused.join(', ')}; next try ${fmt(Math.min(...paused.map((id) => backoff.get(group(id, sources.feeds[id])))))}`);
   if (wrote && push) publish(dir, branch, log);
 }
 

@@ -21,13 +21,15 @@ export async function get(url, { timeoutMs = 45000, retries = 3, conditional = t
       if (res.status === 304 && prev) {
         return wrap(url, 200, prev.buf, prev.headers, true);
       }
-      if (res.status >= 500 || res.status === 429) throw new Error(`HTTP ${res.status}`);
+      if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
       const buf = Buffer.from(await res.arrayBuffer());
       if (!res.ok) {
-        const e = new Error(`HTTP ${res.status} for ${url}`);
+        // 405 on a GET is AWS WAF asking for a CAPTCHA; 429 is "too many requests". Both mean back off:
+        // no retries here, and the caller pauses the source.
+        const e = new Error(`HTTP ${res.status} for ${url}${res.status === 429 ? ' (too many requests)' : ''}`);
         e.status = res.status;
-        e.fatal = res.status === 404 || res.status === 403 || res.status === 401;
-        e.blocked = res.status === 403;
+        e.fatal = [401, 403, 404, 405, 429].includes(res.status);
+        e.blocked = [403, 405, 429].includes(res.status);
         throw e;
       }
       // AWS WAF bot control answers automated clients with a 202 JavaScript challenge page instead of

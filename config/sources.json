@@ -92,7 +92,7 @@
     },
     "mi-eaton": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://results.enr.clarityelections.com/MI/Eaton/127553/",
       "discover": { "state": "MI", "county": "Eaton", "date": "2026-11-03", "pages": ["https://www.eatoncounty.org/"] },
       "note": "Eaton County results (Clarity), precinct level, found on eatoncounty.org (MI/Eaton/127553 linked on Nov 3). MI-07. Relay from home with --feeds ...,mi-eaton"
     },
@@ -132,13 +132,13 @@
     },
     "tx-dallas": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://results.enr.clarityelections.com/TX/Dallas/127396/",
       "discover": { "state": "TX", "county": "Dallas", "date": "2026-11-03", "pages": ["https://www.dallascountyvotes.org/election-results/historical/november-3-2026-general-and-joint-election/", "https://www.dallascountyvotes.org/election-results/", "https://results.enr.clarityelections.com/TX/Dallas/"] },
       "note": "Dallas County election night reporting (Clarity, TX/Dallas/127396 linked from its Nov 3 results page; the site menu still pointed at an older election), precinct level; found by date. The Texas SOS file lagged the big counties on election night. Relay from home."
     },
     "tx-tarrant": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://results.enr.clarityelections.com/TX/Tarrant/127297/",
       "discover": { "state": "TX", "county": "Tarrant", "date": "2026-11-03", "pages": ["https://www.tarrantcountytx.gov/en/elections.html", "https://results.enr.clarityelections.com/TX/Tarrant/"] },
       "note": "Tarrant County results (Clarity, TX/Tarrant/127297 linked Nov 3), precinct level; found by date. Relay from home."
     },

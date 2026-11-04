@@ -235,11 +235,16 @@ export async function fetchFeed(feed, ctx = {}) {
 async function fetchClarity(feed, ctx) {
   const { origin, st, county, eid } = parseClarityUrl(feed.url);
   const filters = ctx.contestFilters || null;
+  const filterKey = (filters || []).map((re) => re.source).join('|');
   if (county) {
     const path = `${st}/${county}/${eid}`;
     const ver = await currentVersion(origin, path);
-    const d = await detailFor(origin, path, ver, { county: county.replace(/_/g, ' '), contestFilters: filters });
-    return { rows: d.rows, meta: { url: feed.url, sourceUpdatedAt: d.timestamp, note: `version ${ver}` } };
+    // The precinct file is only downloaded again when the results version changes.
+    const key = `${origin}/${path}|${filterKey}`;
+    const hit = countyCache.get(key);
+    const d = hit && hit.ver === ver ? hit.d : await detailFor(origin, path, ver, { county: county.replace(/_/g, ' '), contestFilters: filters });
+    if (!hit || hit.ver !== ver) countyCache.set(key, { ver, d, at: Date.now() });
+    return { rows: d.rows, meta: { url: feed.url, sourceUpdatedAt: d.timestamp, note: `version ${ver}${hit && hit.ver === ver ? ' (unchanged)' : ''}` } };
   }
   const path = `${st}/${eid}`;
   const ver = await currentVersion(origin, path);
@@ -274,31 +279,55 @@ async function fetchClarity(feed, ctx) {
   let ts = null;
   const covered = new Set();
   const limit = feed.concurrency || 6;
-  const filterKey = (filters || []).map((re) => re.source).join('|');
   let reused = 0;
-  for (let i = 0; i < counties.length; i += limit) {
+  let stale = 0;
+  let deferred = 0;
+  let blocked = null;
+  // feed.maxDownloads caps the county precinct files downloaded per pass (the home relay sets it, so a
+  // state with ~100 counties all updating doesn't send hundreds of requests every 90 s). Counties never
+  // downloaded go first, then the ones downloaded longest ago; the rest keep their last file this pass.
+  const keyOf = (c) => `${origin}/${st}/${c.name}/${c.ceid}|${filterKey}`;
+  counties.sort((a, b) => (countyCache.get(keyOf(a))?.at || 0) - (countyCache.get(keyOf(b))?.at || 0));
+  let budget = feed.maxDownloads > 0 ? feed.maxDownloads : Infinity;
+  for (let i = 0; i < counties.length && !blocked; i += limit) {
     await Promise.all(
       counties.slice(i, i + limit).map(async (c) => {
         try {
           const cpath = `${st}/${c.name}/${c.ceid}`;
           const ver2 = c.cver && /^\d+$/.test(c.cver) ? c.cver : await currentVersion(origin, cpath);
           // Only download a county's precinct file when its results version changes.
-          const key = `${origin}/${cpath}|${filterKey}`;
+          const key = keyOf(c);
           const hit = countyCache.get(key);
-          const d = hit && hit.ver === ver2 ? hit.d : await detailFor(origin, cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
-          if (!hit || hit.ver !== ver2) countyCache.set(key, { ver: ver2, d });
-          else reused += 1;
+          let d;
+          if (hit && hit.ver === ver2) {
+            d = hit.d;
+            reused += 1;
+          } else if (budget <= 0 || blocked) {
+            if (!hit) {
+              deferred += 1; // filled in from the statewide county-level file below
+              return;
+            }
+            d = hit.d;
+            stale += 1;
+          } else {
+            budget -= 1;
+            d = await detailFor(origin, cpath, ver2, { county: c.name.replace(/_/g, ' '), contestFilters: filters });
+            countyCache.set(key, { ver: ver2, d, at: Date.now() });
+          }
           rows.push(...d.rows);
           covered.add(c.name.replace(/_/g, ' ').toUpperCase());
           ts = d.timestamp || ts;
         } catch (e) {
+          if (e.blocked) blocked = e;
           failed.push(`${c.name}: ${e.message}`);
         }
       })
     );
   }
+  // Refused by the site: stop asking now, so the caller can back off.
+  if (blocked) throw blocked;
   // Counties we could not get precinct detail for fall back to the statewide county-level numbers.
-  if (!counties.length || failed.length || !rows.length) {
+  if (!counties.length || failed.length || deferred || !rows.length) {
     try {
       const d = await detailFor(origin, path, ver, { contestFilters: filters });
       if (!d.rows.length) failed.push(`statewide file matched no board contest; it has ${d.allContests.length} contests, e.g. ${d.allContests.filter((c) => /congress|house|rep|senat/i.test(c)).slice(0, 4).join(' | ') || d.allContests.slice(0, 4).join(' | ')}`);
@@ -313,7 +342,7 @@ async function fetchClarity(feed, ctx) {
     meta: {
       url: feed.url,
       sourceUpdatedAt: ts,
-      note: `${covered.size} county precinct files (${reused} unchanged)${failed.length ? `; ${failed.length} failed (${failed.slice(0, 3).join('; ')})` : ''}`,
+      note: `${covered.size} county precinct files (${reused} unchanged${stale ? `, ${stale} updated next pass` : ''})${deferred ? `; ${deferred} counties county-level until their precinct file is fetched` : ''}${failed.length ? `; ${failed.length} failed (${failed.slice(0, 3).join('; ')})` : ''}`,
     },
   };
 }

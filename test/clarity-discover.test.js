@@ -141,3 +141,69 @@ test('clarity discovery never uses an election whose date it could not confirm',
     srv.close();
   }
 });
+
+test('clarity: per-pass download cap, unchanged counties reused, and a 405 refusal stops the pass without retries', async () => {
+  const detail = (county, votes) => `<ElectionResult><Timestamp>11/3/2026 9:15:03 PM EST</Timestamp><Region>${county}</Region>
+<Contest key="5" text="U.S. House of Representatives District 1" voteFor="1">
+  <Choice key="1" text="Rep Candidate" party="REP"><VoteType name="Election Day"><Precinct name="${county} 1" votes="${votes}"/></VoteType></Choice>
+</Contest></ElectionResult>`;
+  const statewide = `<ElectionResult><Timestamp>11/3/2026 9:15:03 PM EST</Timestamp>
+<Contest key="5" text="U.S. House of Representatives District 1" voteFor="1">
+  <Choice key="1" text="Rep Candidate" party="REP"><VoteType name="Election Day"><County name="Aiken" votes="11"/><County name="Beaufort" votes="22"/><County name="Colleton" votes="33"/></VoteType></Choice>
+</Contest></ElectionResult>`;
+  let ver = 1;
+  let refuse = false;
+  const hits = [];
+  const srv = http.createServer((req, res) => {
+    hits.push(req.url);
+    if (refuse) return res.writeHead(405, { 'x-amzn-waf-action': 'captcha' }).end('captcha');
+    const counties = ['Aiken|200|' + ver, 'Beaufort|300|' + ver, 'Colleton|400|' + ver].map((s) => `${s}|11/3/2026 9:00:00 PM|8`);
+    const routes = {
+      '/SC/126000/current_ver.txt': String(ver),
+      [`/SC/126000/${ver}/json/en/electionsettings.json`]: JSON.stringify({ settings: { electiondetails: { participatingcounties: counties } } }),
+      [`/SC/126000/${ver}/reports/detailxml.zip`]: statewide,
+      [`/SC/Aiken/200/${ver}/reports/detailxml.zip`]: detail('Aiken', 100 * ver),
+      [`/SC/Beaufort/300/${ver}/reports/detailxml.zip`]: detail('Beaufort', 200 * ver),
+      [`/SC/Colleton/400/${ver}/reports/detailxml.zip`]: detail('Colleton', 300 * ver),
+    };
+    const body = routes[req.url];
+    if (body == null) res.writeHead(404).end('nf');
+    else res.end(body);
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  try {
+    const url = `http://127.0.0.1:${srv.address().port}/SC/126000/`;
+    const feed = { adapter: 'clarity', url, maxDownloads: 2, concurrency: 1 };
+    const filters = [houseContestRegex(1)];
+    const precincts = (rows) => rows.filter((r) => r.level !== 'county').map((r) => `${r.county}:${r.votes}`).sort();
+    const countyRows = (rows) => rows.filter((r) => r.level === 'county').map((r) => `${r.county}:${r.votes}`).sort();
+
+    // Pass 1: two county files; the third county comes from the statewide county-level file.
+    let res = await fetchFeed(feed, { contestFilters: filters });
+    assert.deepEqual(precincts(res.rows), ['Aiken:100', 'Beaufort:200']);
+    assert.deepEqual(countyRows(res.rows), ['Colleton:33']);
+    assert.match(res.meta.note, /1 counties county-level/);
+
+    // Pass 2, nothing changed: only Colleton is downloaded.
+    hits.length = 0;
+    res = await fetchFeed(feed, { contestFilters: filters });
+    assert.deepEqual(precincts(res.rows), ['Aiken:100', 'Beaufort:200', 'Colleton:300']);
+    assert.equal(hits.filter((h) => /\/(Aiken|Beaufort|Colleton)\//.test(h)).length, 1);
+
+    // Pass 3, every county updated: two downloads (oldest first), the third keeps its last file.
+    ver = 2;
+    hits.length = 0;
+    res = await fetchFeed(feed, { contestFilters: filters });
+    assert.equal(hits.filter((h) => /\/(Aiken|Beaufort|Colleton)\//.test(h)).length, 2);
+    assert.deepEqual(precincts(res.rows), ['Aiken:200', 'Beaufort:400', 'Colleton:300']);
+    assert.match(res.meta.note, /1 updated next pass/);
+
+    // Refused: blocked error, one request, no retries.
+    refuse = true;
+    hits.length = 0;
+    await assert.rejects(fetchFeed(feed, { contestFilters: filters }), (e) => e.blocked === true && /HTTP 405/.test(e.message));
+    assert.equal(hits.length, 1);
+  } finally {
+    srv.close();
+  }
+});
