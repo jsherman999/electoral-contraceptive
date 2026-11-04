@@ -96,8 +96,17 @@ export function partyFromName(name) {
   return m ? normParty(m[1]) : null;
 }
 
+// Clarity prefixes candidates with their party ("DEM Abdul El-Sayed", "REP Joe Wilson"); other sites
+// don't. Only an all-caps party code followed by a space is removed, so "Rep Candidate" stays as is.
+const PARTY_PREFIX = /^(?:DEM|REP|LIB|LBT|GRN|GRE|GP|IND|NPA|NP|CON|WFP|WF|DFL|NON|UST|NL|NLP|SOC|PSL|AIP|ASP|FWD)\s+(?=\S)/;
+
+/** "DEM Abdul El-Sayed" -> "Abdul El-Sayed" */
+export function stripPartyPrefix(name) {
+  return String(name ?? '').trim().replace(PARTY_PREFIX, '');
+}
+
 export function candidateKey(name) {
-  return String(name ?? '')
+  return stripPartyPrefix(name)
     .toUpperCase()
     .replace(/\(.*?\)/g, ' ')
     .replace(/[^A-Z]/g, '');

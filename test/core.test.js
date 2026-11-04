@@ -254,3 +254,14 @@ test('harris: countywide rows by vote type with precinct counts; replaces the st
   const merged = dedupeCountyTotals([...rows.map((r) => ({ ...r, _feed: 'tx-harris' })), { _feed: 'tx', county: 'HARRIS', precinct: null, level: 'county', contest: 'U. S. SENATOR', candidate: 'JAMES TALARICO', party: 'DEM', mode: 'TOTAL', votes: 100 }]);
   assert.ok(merged.every((r) => r._feed === 'tx-harris'));
 });
+
+test('one candidate across feeds that do and do not prefix the party (Clarity "DEM Abdul El-Sayed")', async () => {
+  const { candidateKey } = await import('../site/js/shared/normalize.js');
+  const { buildUnits } = await import('../collector/lib/units.js');
+  assert.equal(candidateKey('DEM Abdul El-Sayed'), candidateKey('Abdul El-Sayed'));
+  assert.equal(candidateKey('REP Mike Rogers'), candidateKey('Mike Rogers'));
+  assert.notEqual(candidateKey('Rep Candidate'), candidateKey('Dem Candidate'));
+  const row = (county, candidate, party, votes) => ({ county, precinct: '1', contest: 'United States Senator', candidate, party, mode: 'TOTAL', votes });
+  const b = buildUnits([row('Macomb', 'DEM Abdul El-Sayed', 'DEM', 7), row('Ingham', 'Abdul El-Sayed', 'Democratic', 17), row('Macomb', 'REP Mike Rogers', 'REP', 5), row('Ingham', 'Mike Rogers', 'Republican', 20)]);
+  assert.deepEqual(b.candidates.map((c) => [c.name, c.votes]), [['Mike Rogers', 25], ['Abdul El-Sayed', 24]].sort((x, y) => y[1] - x[1]));
+});

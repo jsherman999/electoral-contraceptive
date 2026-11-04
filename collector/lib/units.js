@@ -1,5 +1,5 @@
 // Feed rows -> units (precincts or counties) for one race.
-import { normMode, normParty, partyFromName, candidateKey, isVirtualPrecinct, isNonCandidate, countyKey } from '../../site/js/shared/normalize.js';
+import { normMode, normParty, partyFromName, candidateKey, isVirtualPrecinct, isNonCandidate, countyKey, stripPartyPrefix } from '../../site/js/shared/normalize.js';
 
 /**
  * @param {Array} rows  adapter rows already filtered to this race's contest
@@ -57,7 +57,7 @@ export function buildUnits(rows, opts = {}) {
     const cell = (u.live[m] ||= [0, 0, 0]);
     const v = Number(r.votes) || 0;
     cell[p === 'D' ? 0 : p === 'R' ? 1 : 2] += v;
-    const c = cands.get(ck) || { name: r.candidate, party: p, votes: 0 };
+    const c = cands.get(ck) || { name: stripPartyPrefix(r.candidate), party: p, votes: 0 };
     c.votes += v;
     cands.set(ck, c);
   }
