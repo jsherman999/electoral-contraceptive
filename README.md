@@ -76,8 +76,8 @@ caffeinate -i node collector/relay.js       # all night: Ohio every 150 s (caffe
 caffeinate -i node collector/relay.js --feeds oh,sc,co   # also SC and CO, if your connection gets through
 ```
 
-- Leave it running in a Terminal window. If it stops, relayed data is ignored after 15 minutes, and the
-  board's Sources line says the relay stopped.
+- Leave it running in a Terminal window. If it stops or pauses, the board keeps using the last relayed
+  numbers for up to 12 hours, and the Sources line says how many minutes old they are.
 - If a site refuses your computer too (HTTP 403, 405 or 429), the relay says so and pauses that site for
   5, 10, 20 and then 30 minutes. All Clarity feeds pause together, because Clarity's bot protection
   judges the whole computer. It doesn't try to get around the refusal; the board keeps the last numbers

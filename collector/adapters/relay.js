@@ -2,7 +2,7 @@
 // GitHub's servers but answer a home connection; the relay script fetches those feeds at home and pushes
 // the parsed rows to a branch (default election-data-relay), and this adapter reads them back.
 //
-// Config: { "adapter": "relay", "file": "relay/oh.json", "branch": "election-data-relay", "maxAgeMinutes": 15 }
+// Config: { "adapter": "relay", "file": "relay/oh.json", "branch": "election-data-relay", "maxAgeMinutes": 15, "staleMaxMinutes": 720 }
 // Use it in a fallback group so the direct feed wins when it works:  "OH": [["oh", "oh-relay"]]
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -25,15 +25,20 @@ export async function fetchFeed(feed, ctx = {}) {
     throw new Error(`relay branch has no ${feed.file} yet`);
   }
   const ageMin = (Date.now() - Date.parse(data.fetchedAt)) / 60000;
+  // Past maxAgeMinutes the file is still used (the relay may be paused because a site is refusing it, and
+  // the last numbers beat none), but labelled as not updated. Past staleMaxMinutes it is dropped.
   const maxAge = feed.maxAgeMinutes || 15;
-  if (!(ageMin <= maxAge)) throw new Error(`relayed ${feed.file} is ${Math.round(ageMin)} min old (relay stopped?)`);
+  const staleMax = Math.max(maxAge, feed.staleMaxMinutes || 720);
+  if (!(ageMin <= staleMax)) throw new Error(`relayed ${feed.file} is ${Math.round(ageMin)} min old (relay stopped?)`);
+  const stale = ageMin > maxAge;
   const rows = ctx.contestFilters ? data.rows.filter((r) => ctx.contestFilters.some((re) => re.test(r.contest))) : data.rows;
   return {
     rows,
     meta: {
       url: data.url,
       sourceUpdatedAt: data.sourceUpdatedAt || null,
-      note: `relayed from ${data.host || 'a home computer'} ${Math.round(ageMin)} min ago${data.note ? `; ${data.note}` : ''}`,
+      stale,
+      note: `relayed from ${data.host || 'a home computer'} ${Math.round(ageMin)} min ago${stale ? ' (not updated since: relay paused or stopped)' : ''}${data.note ? `; ${data.note}` : ''}`,
     },
   };
 }
