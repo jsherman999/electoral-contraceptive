@@ -5,7 +5,24 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+// Git never waits for input here (a credential or SSH prompt would freeze the whole relay or
+// collector, since execFileSync blocks), and a stalled network call is killed after a while so the
+// next pass can try again.
+const GIT_ENV = {
+  ...process.env,
+  GIT_TERMINAL_PROMPT: '0',
+  GIT_SSH_COMMAND: process.env.GIT_SSH_COMMAND || 'ssh -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=2',
+};
+const NETWORK = new Set(['push', 'fetch', 'pull', 'clone']);
+const git = (cwd, ...args) =>
+  execFileSync('git', ['-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=30', ...args], {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: GIT_ENV,
+    timeout: NETWORK.has(args[0]) ? 90000 : 30000,
+    killSignal: 'SIGKILL',
+  }).trim();
 const tryGit = (cwd, ...args) => {
   try {
     return git(cwd, ...args);
@@ -60,6 +77,7 @@ export function publish(dir, branch, log = console.log) {
       }
     }
   } catch (e) {
-    log(`publish failed: ${(e.stderr || e.message || '').toString().trim()}`);
+    const why = e.signal === 'SIGKILL' || e.code === 'ETIMEDOUT' ? 'git took too long (network stalled?); will retry next pass' : (e.stderr || e.message || '').toString().trim();
+    log(`publish failed: ${why}`);
   }
 }
