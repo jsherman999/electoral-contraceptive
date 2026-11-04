@@ -38,6 +38,8 @@ for (const url of process.argv.slice(2)) {
       console.log(`(decoded base64 "upload": ${text.length} chars)`);
     }
     console.log(`status ${res.status} · ${res.headers.get('content-type')} · ${res.buf.length} bytes`);
+    const hdrs = ['last-modified', 'etag', 'age', 'cache-control', 'x-cache', 'date'].map((h) => (res.headers.get(h) ? `${h}: ${res.headers.get(h)}` : null)).filter(Boolean);
+    if (hdrs.length) console.log(`headers: ${hdrs.join(' · ')}`);
     // SHAPE=1 prints a JSON response's structure: every key path, array lengths and sample values.
     if (process.env.SHAPE) {
       try {
