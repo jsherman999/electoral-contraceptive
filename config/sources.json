@@ -144,9 +144,9 @@
     },
     "tx-travis": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://results.enr.clarityelections.com/TX/Travis/127492/",
       "discover": { "state": "TX", "county": "Travis", "date": "2026-11-03", "pages": ["https://votetravis.gov/current-election-information/current-election/", "https://votetravis.gov/election-results/", "https://results.enr.clarityelections.com/TX/Travis/"] },
-      "note": "Travis County results (Clarity), precinct level; found by date. Relay from home."
+      "note": "Travis County results (Clarity, TX/Travis/127492, read from a browser on Nov 3: the county pages only link the Clarity root, which refuses scripts), precinct level. Relay from home."
     },
     "tx": {
       "adapter": "tx-civix",
