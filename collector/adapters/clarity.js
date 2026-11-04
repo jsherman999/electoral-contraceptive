@@ -43,6 +43,7 @@ function findCountyList(node, depth = 0) {
 }
 
 const countyCache = new Map(); // county detail by results version, so unchanged counties aren't refetched
+const countyMissing = new Map(); // county precinct file -> time to look again after a 404 (e.g. Colorado has none)
 
 // ---------------------------------------------------------------- discovery
 const discovered = new Map(); // feed key -> { url, verified, at }
@@ -302,7 +303,7 @@ async function fetchClarity(feed, ctx) {
           if (hit && hit.ver === ver2) {
             d = hit.d;
             reused += 1;
-          } else if (budget <= 0 || blocked) {
+          } else if (budget <= 0 || blocked || countyMissing.get(key) > Date.now()) {
             if (!hit) {
               deferred += 1; // filled in from the statewide county-level file below
               return;
@@ -319,6 +320,8 @@ async function fetchClarity(feed, ctx) {
           ts = d.timestamp || ts;
         } catch (e) {
           if (e.blocked) blocked = e;
+          // No precinct file for this county: use its county total and ask again in 30 minutes.
+          if (e.status === 404) countyMissing.set(keyOf(c), Date.now() + 30 * 60000);
           failed.push(`${c.name}: ${e.message}`);
         }
       })

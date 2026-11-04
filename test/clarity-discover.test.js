@@ -207,3 +207,35 @@ test('clarity: per-pass download cap, unchanged counties reused, and a 405 refus
     srv.close();
   }
 });
+
+test('clarity: a county with no precinct file (404) is not asked again every pass', async () => {
+  const statewide = `<ElectionResult><Timestamp>11/3/2026 9:15:03 PM EST</Timestamp>
+<Contest key="5" text="U.S. House of Representatives District 5" voteFor="1">
+  <Choice key="1" text="Rep Candidate" party="REP"><VoteType name="Total Votes"><County name="El Paso" votes="11"/></VoteType></Choice>
+</Contest></ElectionResult>`;
+  const hits = [];
+  const srv = http.createServer((req, res) => {
+    hits.push(req.url);
+    const routes = {
+      '/CO/127407/current_ver.txt': '5',
+      '/CO/127407/5/json/en/electionsettings.json': JSON.stringify({ settings: { electiondetails: { participatingcounties: ['El_Paso|127420|7|11/3/2026 9:00:00 PM|8'] } } }),
+      '/CO/127407/5/reports/detailxml.zip': statewide,
+    };
+    const body = routes[req.url];
+    if (body == null) res.writeHead(404).end('nf');
+    else res.end(body);
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  try {
+    const feed = { adapter: 'clarity', url: `http://127.0.0.1:${srv.address().port}/CO/127407/` };
+    const filters = [houseContestRegex(5)];
+    let res = await fetchFeed(feed, { contestFilters: filters });
+    assert.deepEqual(res.rows.map((r) => `${r.county}:${r.votes}`), ['El Paso:11']);
+    hits.length = 0;
+    res = await fetchFeed(feed, { contestFilters: filters });
+    assert.deepEqual(res.rows.map((r) => `${r.county}:${r.votes}`), ['El Paso:11']);
+    assert.ok(!hits.some((h) => h.includes('/El_Paso/')), hits.join(' '));
+  } finally {
+    srv.close();
+  }
+});
