@@ -79,5 +79,17 @@
   "OH-01": {
     "party": "D",
     "note": "AP about 10:35 pm ET, Greg Landsman"
+  },
+  "ME-SEN": {
+    "party": "D",
+    "note": "AP 1:02 am ET Nov 4, Troy Jackson"
+  },
+  "VA-02": {
+    "party": "D",
+    "note": "AP 11:47 pm ET, Elaine Luria"
+  },
+  "IA-03": {
+    "party": "D",
+    "note": "AP, night of Nov 3-4 (AP story via KWQC), Sarah Trone Garriott"
   }
 }
