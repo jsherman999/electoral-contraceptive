@@ -26,7 +26,7 @@
     },
     "sc": {
       "adapter": "clarity",
-      "url": "",
+      "url": "https://www.enr-scvotes.org/SC/127300/",
       "discover": {
         "state": "SC",
         "date": "2026-11-03",
