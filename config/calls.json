@@ -39,5 +39,25 @@
   "OH-13": {
     "party": "D",
     "note": "AP 7:48 pm ET, Emilia Sykes"
+  },
+  "KY-06": {
+    "party": "D",
+    "note": "AP 10:16 pm ET, Zach Dembo"
+  },
+  "NJ-07": {
+    "party": "D",
+    "note": "AP 9:48 pm ET, Rebecca Bennett"
+  },
+  "TX-SEN": {
+    "party": "D",
+    "note": "AP 11:03 pm ET, James Talarico"
+  },
+  "OH-SEN": {
+    "party": "D",
+    "note": "AP 11:10 pm ET, Sherrod Brown"
+  },
+  "PA-10": {
+    "party": "D",
+    "note": "AP, evening of Nov 3 (AP story via PBS NewsHour), Janelle Stelson"
   }
 }
