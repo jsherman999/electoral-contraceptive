@@ -91,5 +91,21 @@
   "IA-03": {
     "party": "D",
     "note": "AP, night of Nov 3-4 (AP story via KWQC), Sarah Trone Garriott"
+  },
+  "CO-08": {
+    "party": "D",
+    "note": "AP 11:49 pm ET, Manny Rutinel"
+  },
+  "WI-03": {
+    "party": "D",
+    "note": "AP, night of Nov 3-4 (AP story via MyNorthwest), Rebecca Cooke"
+  },
+  "OH-07": {
+    "party": "D",
+    "note": "AP, early Nov 4 (AP story via Ottumwa Courier), Brian Poindexter"
+  },
+  "TX-28": {
+    "party": "D",
+    "note": "AP, night of Nov 3-4 (AP story via La Nacion), Henry Cuellar"
   }
 }
