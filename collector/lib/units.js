@@ -1,5 +1,5 @@
 // Feed rows -> units (precincts or counties) for one race.
-import { normMode, normParty, partyFromName, candidateKey, isVirtualPrecinct, isNonCandidate } from '../../site/js/shared/normalize.js';
+import { normMode, normParty, partyFromName, candidateKey, isVirtualPrecinct, isNonCandidate, countyKey } from '../../site/js/shared/normalize.js';
 
 /**
  * @param {Array} rows  adapter rows already filtered to this race's contest
@@ -26,14 +26,15 @@ export function buildUnits(rows, opts = {}) {
     if (!prev || (prev === 'O' && p !== 'O')) party.set(ck, p);
   }
 
-  const precCounties = new Set(rows.filter((r) => r.precinct != null && r.level !== 'county').map((r) => r.county));
+  // County names differ in case between feeds (Texas's state file: HARRIS; county sites: Harris).
+  const precCounties = new Set(rows.filter((r) => r.precinct != null && r.level !== 'county').map((r) => countyKey(r.county)));
   const units = new Map();
   const cands = new Map();
   const contests = new Set();
   for (const r of rows) {
     if (isNonCandidate(r.candidate)) continue;
     const isCounty = r.precinct == null || r.level === 'county';
-    if (isCounty && precCounties.has(r.county)) continue; // precinct detail wins over county totals
+    if (isCounty && precCounties.has(countyKey(r.county))) continue; // precinct detail wins over county totals
     contests.add(r.contest);
     const ck = candidateKey(r.candidate);
     const p = party.get(ck) || 'O';

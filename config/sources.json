@@ -123,6 +123,24 @@
       "note": "Macomb County Clerk unofficial detailed results (Clarity), precinct level; linked from macombgov.org/departments/clerk-register-deeds/elections on Nov 3. Macomb is 250 of MI-10's 288 precincts. Clarity often challenges GitHub; relay from home with --feeds ...,mi-macomb"
     },
     "nj": { "adapter": "clarity", "url": "", "hint": "New Jersey: county clerks. One feed per county." },
+    "tx-dallas": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": { "state": "TX", "county": "Dallas", "date": "2026-11-03", "pages": ["https://www.dallascountyvotes.org/election-results/", "https://results.enr.clarityelections.com/TX/Dallas/"] },
+      "note": "Dallas County election night reporting (Clarity), precinct level; found by date. The Texas SOS file lagged the big counties on election night. Relay from home."
+    },
+    "tx-tarrant": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": { "state": "TX", "county": "Tarrant", "date": "2026-11-03", "pages": ["https://www.tarrantcountytx.gov/en/elections.html", "https://results.enr.clarityelections.com/TX/Tarrant/"] },
+      "note": "Tarrant County results (Clarity, TX/Tarrant/127297 linked Nov 3), precinct level; found by date. Relay from home."
+    },
+    "tx-travis": {
+      "adapter": "clarity",
+      "url": "",
+      "discover": { "state": "TX", "county": "Travis", "date": "2026-11-03", "pages": ["https://votetravis.gov/election-results/", "https://results.enr.clarityelections.com/TX/Travis/"] },
+      "note": "Travis County results (Clarity), precinct level; found by date. Relay from home."
+    },
     "tx": {
       "adapter": "tx-civix",
       "url": "https://goelect.txelections.civixapps.com/ivis-enr-ui/races",
@@ -140,6 +158,9 @@
     "mi-relay": { "adapter": "relay", "file": "relay/mi.json", "maxAgeMinutes": 720, "note": "Michigan results imported by hand (collector/manual.js); trusted for 12 hours" },
     "mi-oakland-relay": { "adapter": "relay", "file": "relay/mi-oakland.json", "note": "Oakland County results relayed from a home computer" },
     "mi-eaton-relay": { "adapter": "relay", "file": "relay/mi-eaton.json", "note": "Eaton County results relayed from a home computer" },
+    "tx-dallas-relay": { "adapter": "relay", "file": "relay/tx-dallas.json", "note": "Dallas County results relayed from a home computer" },
+    "tx-tarrant-relay": { "adapter": "relay", "file": "relay/tx-tarrant.json", "note": "Tarrant County results relayed from a home computer" },
+    "tx-travis-relay": { "adapter": "relay", "file": "relay/tx-travis.json", "note": "Travis County results relayed from a home computer" },
     "mi-macomb-relay": { "adapter": "relay", "file": "relay/mi-macomb.json", "note": "Macomb County results relayed from a home computer (collector/relay.js --feeds ...,mi-macomb)" },
     "sc-relay": { "adapter": "relay", "file": "relay/sc.json", "note": "South Carolina results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
     "co-relay": { "adapter": "relay", "file": "relay/co.json", "note": "Colorado results relayed from a home computer (collector/relay.js --feeds oh,sc,co)" },
@@ -161,7 +182,7 @@
     "PA": ["pa"],
     "MI": [["mi", "mi-relay"], ["mi-macomb", "mi-macomb-relay"], ["mi-eaton", "mi-eaton-relay"], "mi-vanburen", "mi-shiawassee", "mi-ingham"],
     "NJ": ["nj"],
-    "TX": ["tx"],
+    "TX": ["tx", ["tx-dallas", "tx-dallas-relay"], ["tx-tarrant", "tx-tarrant-relay"], ["tx-travis", "tx-travis-relay"]],
     "ME": ["me"],
     "NY": ["ny"],
     "AZ": ["az"],

@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contestMatcher } from './lib/contest.js';
 import { buildUnits } from './lib/units.js';
+import { countyKey } from '../site/js/shared/normalize.js';
 import { loadBaseline, attachBaseline } from './lib/baseline.js';
 import { buildRace } from '../site/js/shared/race.js';
 import { nationalSwing } from '../site/js/shared/model.js';
@@ -139,6 +140,31 @@ async function fetchFeeds(needed, sources) {
 }
 
 // ------------------------------------------------------------------ one pass
+/**
+ * When two feeds give county totals for the same county (Texas's state file and a county's own site),
+ * keep only the feed with more votes there, so the county isn't counted twice. Rows are edited in place.
+ */
+export function dedupeCountyTotals(rows) {
+  const byCounty = new Map(); // county key -> Map(feed -> votes)
+  for (const r of rows) {
+    if (!(r.precinct == null || r.level === 'county')) continue;
+    const k = countyKey(r.county);
+    if (!byCounty.has(k)) byCounty.set(k, new Map());
+    const m = byCounty.get(k);
+    m.set(r._feed, (m.get(r._feed) || 0) + (Number(r.votes) || 0));
+  }
+  const keep = new Map();
+  for (const [k, m] of byCounty) if (m.size > 1) keep.set(k, [...m].sort((a, b) => b[1] - a[1])[0][0]);
+  if (!keep.size) return rows;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const r = rows[i];
+    if (!(r.precinct == null || r.level === 'county')) continue;
+    const want = keep.get(countyKey(r.county));
+    if (want && r._feed !== want) rows.splice(i, 1);
+  }
+  return rows;
+}
+
 const histories = new Map();
 
 function loadHistories(outDir) {
@@ -182,9 +208,10 @@ async function runOnce(outDir) {
       for (const r of fr.rows) {
         if (!p.re.test(r.contest)) continue;
         if (counties && !counties.has(String(r.county).toUpperCase())) continue;
-        rows.push(r);
+        rows.push({ ...r, _feed: p.feed });
       }
     }
+    dedupeCountyTotals(rows);
     const cfg = sources.races?.[id] && !Array.isArray(sources.races[id]) ? sources.races[id] : {};
     const built = buildUnits(rows, { candidates: cfg.candidates || plan.find((p) => p.candidates)?.candidates });
     const { candidates, contests } = built;

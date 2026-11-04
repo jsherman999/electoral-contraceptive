@@ -224,3 +224,16 @@ test('county totals without precinct counts are not treated as complete (Ohio ea
   assert.equal(b.summary.swing, null);
   assert.ok(b.summary.projection.expectedPct < 0.5);
 });
+
+test('county totals from two feeds are not added together; precinct detail wins regardless of case', async () => {
+  const { dedupeCountyTotals } = await import('../collector/collect.js');
+  const { buildUnits } = await import('../collector/lib/units.js');
+  const row = (feed, county, votes, precinct = null) => ({ _feed: feed, county, precinct, level: precinct ? 'precinct' : 'county', contest: 'U. S. SENATOR', candidate: 'A', party: 'DEM', mode: 'TOTAL', votes });
+  // state file still zero for Harris, county site has it: keep the county site's total only
+  let rows = dedupeCountyTotals([row('tx', 'HARRIS', 0), row('tx-harris', 'Harris', 900), row('tx', 'STARR', 50)]);
+  assert.deepEqual(rows.map((r) => r._feed + ':' + r.county), ['tx-harris:Harris', 'tx:STARR']);
+  // precinct rows from a county site replace the state's county total even when case differs
+  const built = buildUnits([row('tx', 'HARRIS', 1000), row('tx-harris', 'Harris', 600, '0001'), row('tx-harris', 'Harris', 500, '0002')]);
+  assert.equal(built.units.length, 2);
+  assert.ok(built.units.every((u) => u.lvl === 'precinct'));
+});
