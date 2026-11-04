@@ -133,8 +133,8 @@
     "tx-dallas": {
       "adapter": "clarity",
       "url": "",
-      "discover": { "state": "TX", "county": "Dallas", "date": "2026-11-03", "pages": ["https://www.dallascountyvotes.org/election-results/", "https://results.enr.clarityelections.com/TX/Dallas/"] },
-      "note": "Dallas County election night reporting (Clarity), precinct level; found by date. The Texas SOS file lagged the big counties on election night. Relay from home."
+      "discover": { "state": "TX", "county": "Dallas", "date": "2026-11-03", "pages": ["https://www.dallascountyvotes.org/election-results/historical/november-3-2026-general-and-joint-election/", "https://www.dallascountyvotes.org/election-results/", "https://results.enr.clarityelections.com/TX/Dallas/"] },
+      "note": "Dallas County election night reporting (Clarity, TX/Dallas/127396 linked from its Nov 3 results page; the site menu still pointed at an older election), precinct level; found by date. The Texas SOS file lagged the big counties on election night. Relay from home."
     },
     "tx-tarrant": {
       "adapter": "clarity",
@@ -145,7 +145,7 @@
     "tx-travis": {
       "adapter": "clarity",
       "url": "",
-      "discover": { "state": "TX", "county": "Travis", "date": "2026-11-03", "pages": ["https://votetravis.gov/election-results/", "https://results.enr.clarityelections.com/TX/Travis/"] },
+      "discover": { "state": "TX", "county": "Travis", "date": "2026-11-03", "pages": ["https://votetravis.gov/current-election-information/current-election/", "https://votetravis.gov/election-results/", "https://results.enr.clarityelections.com/TX/Travis/"] },
       "note": "Travis County results (Clarity), precinct level; found by date. Relay from home."
     },
     "tx": {
