@@ -15,8 +15,14 @@ const pick = (o, ...keys) => {
   return '';
 };
 
+// The file sits behind a CDN that kept serving the morning's empty copy of the plain URL on election
+// night; a query string that changes every minute gets the current file (set "cacheBust": false to stop).
+export function freshUrl(url, now = Date.now()) {
+  return `${url}${url.includes('?') ? '&' : '?'}nocache=${Math.floor(now / 60000)}`;
+}
+
 export async function fetchFeed(feed, ctx = {}) {
-  const res = await get(feed.url, { timeoutMs: 60000 });
+  const res = await get(feed.cacheBust === false ? feed.url : freshUrl(feed.url), { timeoutMs: 60000, conditional: feed.cacheBust === false });
   const { rows: raw } = parseDelimited(res.text(), { delimiter: '\t' });
   const rows = [];
   for (const r of raw) {
