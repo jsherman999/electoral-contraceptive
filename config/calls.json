@@ -7,5 +7,25 @@
   "NC-SEN": {
     "party": "D",
     "note": "AP, evening of Nov 3 (NPR, WBTV), Roy Cooper"
+  },
+  "FL-SEN": {
+    "party": "R",
+    "note": "AP 8:34 pm ET, Ashley Moody"
+  },
+  "FL-25": {
+    "party": "D",
+    "note": "AP 8:07 pm ET, Jared Moskowitz"
+  },
+  "FL-14": {
+    "party": "D",
+    "note": "AP 8:13 pm ET, Kathy Castor"
+  },
+  "VA-07": {
+    "party": "D",
+    "note": "AP 8:40 pm ET, Eugene Vindman"
+  },
+  "NC-11": {
+    "party": "D",
+    "note": "AP, evening of Nov 3 (WLOS), Jamie Ager"
   }
 }
