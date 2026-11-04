@@ -105,7 +105,7 @@ async function fetchFeeds(needed, sources) {
           return;
         }
         const base = { id, adapter: feed.adapter, url: feed.url || null, fetchedAt, note: feed.note };
-        if (!feed.url && !feed.discover && !feed.file) {
+        if (!feed.url && !feed.discover && !feed.file && !feed.page) {
           status[id] = { ...base, ok: false, configured: false, error: feed.hint ? `no URL configured yet: ${feed.hint}` : 'no URL configured yet' };
           return;
         }

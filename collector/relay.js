@@ -68,7 +68,7 @@ async function pass() {
       log(`${id}: not defined in config/sources.json`);
       continue;
     }
-    if (!feed.url && !feed.discover) {
+    if (!feed.url && !feed.discover && !feed.page) {
       log(`${id}: no URL configured yet. Find the state's results data URL (try: node collector/probe.js <url>) and set feeds.${id}.url in config/sources.json`);
       continue;
     }
